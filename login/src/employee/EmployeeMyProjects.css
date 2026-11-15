@@ -1,0 +1,110 @@
+.employee-my-projects {
+  width: 100%;
+}
+
+.employee-my-projects-heading {
+  margin-bottom: 22px;
+}
+
+.employee-my-projects-heading h2 {
+  margin: 0 0 8px;
+  color: #0f172a;
+  font-size: 24px;
+}
+
+.employee-my-projects-heading p {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.employee-projects-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.employee-projects-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.employee-projects-table th {
+  padding: 15px 18px;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.employee-projects-table td {
+  padding: 16px 18px;
+  border-top: 1px solid #e2e8f0;
+  color: #334155;
+  font-size: 14px;
+}
+
+.employee-projects-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.employee-task-status {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 20px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.employee-projects-error {
+  padding: 14px;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.employee-projects-empty {
+  padding: 40px 20px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #64748b;
+  text-align: center;
+}
+
+/* Task attachment */
+
+.employee-task-file-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 12px;
+  border-radius: 7px;
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.2s ease;
+}
+
+.employee-task-file-link:hover {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.employee-task-file-link:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.employee-task-no-file {
+  color: #94a3b8;
+  font-size: 12px;
+}

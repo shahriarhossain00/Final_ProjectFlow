@@ -1,0 +1,210 @@
+.employee-profile-page {
+  width: 100%;
+  max-width: 850px;
+  margin: 0 auto;
+}
+
+.employee-profile-heading {
+  margin-bottom: 24px;
+}
+
+.employee-profile-heading h1 {
+  margin: 0 0 8px;
+  font-size: 26px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.employee-profile-heading p {
+  margin: 0;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.employee-profile-card {
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+}
+
+.employee-profile-banner {
+  height: 120px;
+  background: linear-gradient(115deg, #2563eb, #60a5fa);
+}
+
+.employee-profile-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 32px 36px;
+}
+
+.employee-profile-picture {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 108px;
+  height: 108px;
+  margin-top: -54px;
+  border: 5px solid #ffffff;
+  border-radius: 50%;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: 38px;
+  font-weight: 700;
+  overflow: hidden;
+}
+
+.employee-profile-picture img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.employee-profile-body h2 {
+  margin: 14px 0 8px;
+  color: #0f172a;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.employee-profile-role {
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.employee-profile-status {
+  margin-top: 18px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.employee-profile-error {
+  margin-top: 18px;
+  color: #dc2626;
+  font-size: 13px;
+  text-align: center;
+}
+
+.employee-profile-info {
+  width: 100%;
+  max-width: 520px;
+  margin-top: 28px;
+}
+
+.employee-profile-info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 4px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.employee-profile-info-row:last-child {
+  border-bottom: none;
+}
+
+.employee-profile-info-row span {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.employee-profile-info-row strong {
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+  .employee-profile-heading h1 {
+    font-size: 22px;
+  }
+
+  .employee-profile-banner {
+    height: 100px;
+  }
+
+  .employee-profile-body {
+    padding: 0 18px 24px;
+  }
+
+  .employee-profile-info-row {
+    padding: 15px 0;
+  }
+}
+
+/* Account Security Section */
+
+.employee-profile-security {
+  margin-top: 24px;
+  padding: 24px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+}
+
+.employee-profile-security-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.employee-profile-security-header h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.employee-profile-security-header p {
+  margin: 0;
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.employee-profile-password-toggle {
+  flex-shrink: 0;
+  padding: 11px 18px;
+  border: 1px solid #2563eb;
+  border-radius: 9px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.employee-profile-password-toggle:hover {
+  background: #dbeafe;
+}
+
+.employee-profile-security .change-password-container {
+  max-width: 100%;
+  margin-top: 24px;
+  box-shadow: none;
+}
+
+@media (max-width: 600px) {
+  .employee-profile-security {
+    padding: 18px;
+  }
+
+  .employee-profile-security-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .employee-profile-password-toggle {
+    width: 100%;
+  }
+}

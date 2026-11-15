@@ -1,0 +1,199 @@
+.task-submission-page {
+  width: 100%;
+  max-width: 850px;
+  margin: 0 auto;
+  padding: 10px 0 30px;
+  color: #17233d;
+}
+
+.task-submission-heading {
+  margin-bottom: 24px;
+}
+
+.task-submission-heading h2 {
+  margin: 0 0 8px;
+  font-size: 26px;
+  font-weight: 750;
+  color: #142440;
+}
+
+.task-submission-heading p {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.task-submission-card {
+  padding: 30px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-top: 4px solid #2563eb;
+  border-radius: 16px;
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.05);
+}
+
+.task-submission-info {
+  padding: 18px;
+  margin-bottom: 24px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+}
+
+.task-submission-label {
+  font-size: 12px;
+  font-weight: 650;
+  color: #2563eb;
+}
+
+.task-submission-info h3 {
+  margin: 8px 0;
+  color: #1e3a8a;
+  font-size: 18px;
+}
+
+.task-submission-info p {
+  margin: 5px 0 0;
+  color: #475569;
+  font-size: 13px;
+}
+
+.task-submission-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.task-submission-field {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.task-submission-field label {
+  color: #334155;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.task-submission-field input,
+.task-submission-field textarea {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  background: #fff;
+  color: #17233d;
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+}
+
+.task-submission-field textarea {
+  min-height: 125px;
+  resize: vertical;
+}
+
+.task-submission-field input:focus,
+.task-submission-field textarea:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.task-submission-field input[type="file"] {
+  padding: 12px;
+  background: #f8fafc;
+  cursor: pointer;
+}
+
+.task-submission-field small {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.task-submission-file-name {
+  margin: 0;
+  color: #2563eb;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.task-submission-note {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.task-submission-error {
+  padding: 12px;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 13px;
+}
+
+.task-submission-success {
+  padding: 12px;
+  border-radius: 8px;
+  background: #ecfdf5;
+  color: #047857;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.task-submission-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 20px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.task-submission-actions button {
+  min-height: 44px;
+  padding: 11px 22px;
+  border: 0;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.task-submission-cancel {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.task-submission-submit {
+  background: #2563eb;
+  color: #fff;
+}
+
+.task-submission-submit:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.task-submission-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .task-submission-card {
+    padding: 18px;
+  }
+
+  .task-submission-heading h2 {
+    font-size: 22px;
+  }
+
+  .task-submission-actions {
+    flex-direction: column-reverse;
+  }
+
+  .task-submission-actions button {
+    width: 100%;
+  }
+}

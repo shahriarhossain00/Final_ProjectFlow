@@ -1,0 +1,118 @@
+.all-members-page {
+  width: 100%;
+}
+
+.all-members-page h2 {
+  margin: 0 0 8px;
+  font-size: 26px;
+}
+
+.page-subtitle {
+  margin: 0 0 24px;
+  color: #64748b;
+}
+
+.member-form {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 550px;
+  margin-bottom: 28px;
+}
+
+.member-form h3 {
+  margin: 0 0 18px;
+}
+
+.member-form label {
+  display: block;
+  font-weight: 500;
+  margin: 16px 0 8px;
+}
+
+.member-form input,
+.member-form select {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: white;
+  font: inherit;
+}
+
+.member-form button {
+  margin-top: 22px;
+  padding: 12px 18px;
+  border: none;
+  border-radius: 8px;
+  background: #2563eb;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.member-form button:hover {
+  background: #1d4ed8;
+}
+
+.form-success {
+  color: #15803d;
+  background: #dcfce7;
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 16px;
+}
+
+.form-error {
+  color: #b91c1c;
+  background: #fee2e2;
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 16px;
+}
+
+.members-table-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.members-table-card h3 {
+  margin: 0 0 20px;
+}
+
+.members-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.members-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.members-table th {
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 14px;
+}
+
+.members-table th,
+.members-table td {
+  padding: 14px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.members-table tr:last-child td {
+  border-bottom: none;
+}
+
+@media (max-width: 600px) {
+  .member-form,
+  .members-table-card {
+    padding: 16px;
+  }
+}

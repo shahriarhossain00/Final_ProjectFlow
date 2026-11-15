@@ -1,0 +1,142 @@
+.task-details-page h2 {
+  margin: 0 0 8px;
+  font-size: 26px;
+  color: #1e293b;
+}
+
+.task-details-subtitle {
+  color: #64748b;
+  margin: 0 0 26px;
+}
+
+.task-details-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr));
+  gap: 22px;
+}
+
+.task-details-card {
+  min-width: 0;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+}
+
+.details-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 20px;
+}
+
+.details-card-header h3 {
+  margin: 0 0 8px;
+  font-size: 21px;
+  overflow-wrap: anywhere;
+}
+
+.details-card-header p {
+  margin: 0;
+  color: #64748b;
+  line-height: 1.6;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.details-task-count {
+  white-space: nowrap;
+  color: #1d4ed8;
+  background: #dbeafe;
+  padding: 7px 11px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.task-details-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.task-details-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 9px;
+}
+
+.details-task-info {
+  min-width: 0;
+}
+
+.details-task-info strong {
+  display: block;
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.details-task-info p {
+  margin: 7px 0 0;
+  color: #64748b;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.details-status {
+  display: inline-block;
+  flex-shrink: 0;
+  padding: 7px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.details-status.pending {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.details-status.ongoing {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.details-status.done {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.details-status.unselected {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.details-empty {
+  color: #94a3b8;
+  text-align: center;
+  padding: 18px;
+  background: #f8fafc;
+  border-radius: 8px;
+}
+
+@media (max-width: 600px) {
+  .task-details-card {
+    padding: 16px;
+  }
+
+  .task-details-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

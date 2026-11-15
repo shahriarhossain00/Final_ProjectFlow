@@ -1,0 +1,434 @@
+/* Page Heading */
+
+.create-project-page h2 {
+  margin: 0 0 8px;
+  font-size: 26px;
+  color: #1e293b;
+}
+
+.project-page-subtitle {
+  color: #64748b;
+  margin-bottom: 24px;
+}
+
+/* Create Project Form */
+
+.create-project-form {
+  width: 100%;
+  max-width: 600px;
+  padding: 26px;
+  margin-bottom: 30px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+}
+
+.create-project-form h3 {
+  margin: 0 0 20px;
+  color: #1e293b;
+}
+
+.create-project-form label {
+  display: block;
+  margin: 18px 0 8px;
+  font-weight: 500;
+  color: #334155;
+}
+
+.create-project-form input,
+.create-project-form textarea {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: white;
+  font: inherit;
+}
+
+.create-project-form textarea {
+  resize: vertical;
+}
+
+.create-project-form input:focus,
+.create-project-form textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Create Project Buttons */
+
+.project-form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.project-form-actions button {
+  padding: 12px 20px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.project-form-actions button:hover {
+  background: #1d4ed8;
+}
+
+/* Project Table */
+
+.projects-table-card {
+  padding: 24px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+}
+
+.projects-table-card h3 {
+  margin: 0 0 20px;
+  color: #1e293b;
+}
+
+.projects-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.projects-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.projects-table th {
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 14px;
+}
+
+.projects-table th,
+.projects-table td {
+  padding: 14px;
+  border-bottom: 1px solid #e2e8f0;
+  vertical-align: middle;
+  overflow-wrap: anywhere;
+}
+
+.project-table-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.project-table-actions button {
+  padding: 8px 13px;
+  border: none;
+  border-radius: 7px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.project-table-edit {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.project-table-delete {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+/* Shared Modal Overlay */
+
+.project-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.55);
+}
+
+/* Edit Project Modal */
+
+.project-edit-modal {
+  width: 100%;
+  max-width: 520px;
+  max-height: 90dvh;
+  overflow-y: auto;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 25px 60px rgba(15, 23, 42, 0.25);
+  animation: editModalAppear 0.2s ease-out;
+}
+
+.edit-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 24px 26px 18px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.edit-modal-header h3 {
+  margin: 0 0 6px;
+  font-size: 22px;
+  color: #1e293b;
+}
+
+.edit-modal-header p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.edit-modal-close {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.edit-modal-close:hover {
+  background: #e2e8f0;
+}
+
+.edit-modal-body {
+  padding: 24px 26px;
+}
+
+.edit-modal-body label {
+  display: block;
+  margin: 0 0 8px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #334155;
+}
+
+.edit-modal-body input,
+.edit-modal-body textarea {
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 20px;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  background: #f8fafc;
+  color: #1e293b;
+  font: inherit;
+}
+
+.edit-modal-body textarea {
+  resize: vertical;
+}
+
+.edit-modal-body input:focus,
+.edit-modal-body textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.edit-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 26px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+}
+
+.edit-modal-footer button {
+  padding: 11px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.edit-modal-cancel {
+  border: 1px solid #cbd5e1;
+  background: white;
+  color: #475569;
+}
+
+.edit-modal-save {
+  background: #2563eb;
+  border: 1px solid #2563eb;
+  color: white;
+}
+
+.edit-modal-save:hover {
+  background: #1d4ed8;
+}
+
+/* Delete Project Modal */
+
+.project-delete-modal {
+  width: 100%;
+  max-width: 470px;
+  max-height: 90dvh;
+  overflow-y: auto;
+  padding: 26px;
+  background: white;
+  border-radius: 12px;
+}
+
+.project-delete-modal h3 {
+  margin: 0 0 16px;
+}
+
+.project-delete-modal p {
+  line-height: 1.6;
+}
+
+.delete-warning {
+  padding: 12px;
+  color: #b91c1c;
+  background: #fee2e2;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.project-delete-modal label {
+  display: block;
+  margin: 20px 0 8px;
+  font-weight: 500;
+}
+
+.project-delete-modal select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: white;
+  font: inherit;
+}
+
+.project-delete-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.project-delete-actions button {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.project-delete-actions .project-cancel-btn {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.confirm-delete-btn {
+  background: #dc2626;
+  color: white;
+}
+
+/* Animation */
+
+@keyframes editModalAppear {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Responsive */
+
+@media (max-width: 600px) {
+  .create-project-form,
+  .projects-table-card,
+  .project-delete-modal {
+    padding: 16px;
+  }
+
+  .project-edit-modal {
+    max-width: 100%;
+    border-radius: 12px;
+  }
+
+  .edit-modal-header,
+  .edit-modal-body {
+    padding: 18px;
+  }
+
+  .edit-modal-footer {
+    padding: 16px 18px;
+    flex-wrap: wrap;
+  }
+
+  .edit-modal-footer button {
+    flex: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .project-edit-modal {
+    animation: none;
+  }
+}
+/* Edit Success Section */
+
+.edit-success-section {
+  padding: 20px 26px 24px;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.edit-success-message {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  margin: 0 0 16px;
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.back-to-project-btn {
+  width: 100%;
+  padding: 12px 18px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.back-to-project-btn:hover {
+  background: #1d4ed8;
+}
+
+@media (max-width: 600px) {
+  .edit-success-section {
+    padding: 16px 18px;
+  }
+}

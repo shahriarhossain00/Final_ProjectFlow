@@ -1,0 +1,33 @@
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+!.env.production.example
+
+# Python
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.sqlite3
+db.sqlite3
+staticfiles/
+
+# React / Vite
+node_modules/
+dist/
+.vite/
+
+# Uploaded files
+media/
+PMS/media/
+
+# IDE and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
