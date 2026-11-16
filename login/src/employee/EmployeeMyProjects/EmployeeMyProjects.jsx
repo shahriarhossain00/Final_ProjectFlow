@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getEmployeeTasks } from "./employeeTasksApi";
+import { getEmployeeTasks } from "../api/employeeTasksApi";
 import "./EmployeeMyProjects.css";
 
 const API_BASE_URL = (

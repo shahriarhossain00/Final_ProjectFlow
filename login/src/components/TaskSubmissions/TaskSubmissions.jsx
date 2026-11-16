@@ -3,9 +3,9 @@ import { useEffect, useState } from "react";
 import {
   getTaskSubmissions,
   getSubmissionFileUrl,
-} from "../services/taskSubmissionsApi";
+} from "../../services/taskSubmissionsApi";
 
-import { getEmployees, getTasks } from "../services/taskApi";
+import { getEmployees, getTasks } from "../../services/taskApi";
 
 function getId(value) {
   if (value && typeof value === "object") {

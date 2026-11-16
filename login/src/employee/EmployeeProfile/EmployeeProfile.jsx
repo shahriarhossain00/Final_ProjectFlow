@@ -3,9 +3,9 @@ import { useEffect, useRef, useState } from "react";
 import {
   getEmployeeProfile,
   uploadEmployeeProfilePicture,
-} from "./employeeProfileApi";
+} from "../api/employeeProfileApi";
 
-import ChangePassword from "./ChangePassword";
+import ChangePassword from "../ChangePassword/ChangePassword";
 import "./EmployeeProfile.css";
 
 const API_BASE_URL = (

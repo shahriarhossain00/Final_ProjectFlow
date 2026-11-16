@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { forgotPassword } from "./passwordResetApi";
+import { forgotPassword } from "../api/passwordResetApi";
 import "./ForgotPassword.css";
 
 function ForgotPassword({ onOtpSent, onBackToLogin }) {

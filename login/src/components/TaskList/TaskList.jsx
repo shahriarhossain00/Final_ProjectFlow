@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import "./TaskList.css";
 
-import TaskAssignmentForm from "./TaskAssignmentForm";
+import TaskAssignmentForm from "../TaskAssignmentForm/TaskAssignmentForm";
 
 import {
   getTasks,
   getEmployees,
   updateTask,
   deleteTask,
-} from "../services/taskApi";
+} from "../../services/taskApi";
 
 const TASK_STATUSES = ["Not Started", "In Progress", "Completed", "On Hold"];
 

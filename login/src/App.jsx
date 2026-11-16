@@ -1,13 +1,13 @@
 import { useState } from "react";
 
-import Login from "./components/Login";
-import Dashboard from "./components/Dashboard";
+import Login from "./components/Login/Login";
+import Dashboard from "./components/Dashboard/Dashboard";
 
-import Register from "./employee/Register";
-import EmployeeDashboard from "./employee/EmployeeDashboard";
+import Register from "./employee/Register/Register";
+import EmployeeDashboard from "./employee/EmployeeDashboard/EmployeeDashboard";
 
-import ForgotPassword from "./employee/Forget_Reset_Pass/ForgotPassword";
-import ResetPassword from "./employee/Forget_Reset_Pass/ResetPassword";
+import ForgotPassword from "./employee/ForgotPassword/ForgotPassword";
+import ResetPassword from "./employee/ResetPassword/ResetPassword";
 
 const API_BASE_URL = (
   import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000"

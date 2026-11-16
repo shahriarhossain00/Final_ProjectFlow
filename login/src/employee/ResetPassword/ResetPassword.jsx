@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { forgotPassword, resetPassword } from "./passwordResetApi";
+import { forgotPassword, resetPassword } from "../api/passwordResetApi";
 import "./ResetPassword.css";
 
 const COOLDOWN_MS = 5 * 60 * 1000;

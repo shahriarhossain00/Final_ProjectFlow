@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import "./ProjectMembers.css";
-import { getEmployees, getTasks } from "../services/taskApi";
+import { getEmployees, getTasks } from "../../services/taskApi";
 
 function getEmployeeName(employee) {
   if (!employee) return "Unknown Employee";

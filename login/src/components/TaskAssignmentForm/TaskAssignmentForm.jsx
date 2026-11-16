@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import "./TaskList.css";
+import "../TaskList/TaskList.css";
 import "./TaskAssignmentForm.css";
 
-import { createTaskWithFile } from "../services/taskFileApi";
-import { getEmployees, getTaskProject } from "../services/taskApi";
+import { createTaskWithFile } from "../../services/taskFileApi";
+import { getEmployees, getTaskProject } from "../../services/taskApi";
 
 const TASK_STATUSES = ["Not Started", "In Progress", "Completed", "On Hold"];
 

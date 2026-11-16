@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { getEmployeeTasks } from "./employeeTasksApi";
-import TaskSubmissionForm from "./TaskSubmissionForm";
-import "./EmployeeMyProjects.css";
+import { getEmployeeTasks } from "../api/employeeTasksApi";
+import TaskSubmissionForm from "../TaskSubmissionForm/TaskSubmissionForm";
+import "../EmployeeMyProjects/EmployeeMyProjects.css";
 
 function getAssignedUserId(task) {
   if (task.assigned_to && typeof task.assigned_to === "object") {

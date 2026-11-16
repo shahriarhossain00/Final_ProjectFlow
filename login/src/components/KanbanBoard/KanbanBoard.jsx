@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import "./KanbanBoard.css";
 
-import { getTasks, getEmployees } from "../services/taskApi";
+import { getTasks, getEmployees } from "../../services/taskApi";
 
 const columns = [
   {

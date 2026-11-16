@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { changeEmployeePassword } from "./changePasswordApi";
+import { changeEmployeePassword } from "../api/changePasswordApi";
 import "./ChangePassword.css";
 
 function ChangePassword({ onPasswordChanged }) {

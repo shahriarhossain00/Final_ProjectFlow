@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import EmployeeProfile from "./EmployeeProfile";
-import EmployeeMyProjects from "./EmployeeMyProjects";
-import EmployeeMyTasks from "./EmployeeMyTasks";
-import { getEmployeeProfile } from "./employeeProfileApi";
-import { getEmployeeTasks } from "./employeeTasksApi";
+import EmployeeProfile from "../EmployeeProfile/EmployeeProfile";
+import EmployeeMyProjects from "../EmployeeMyProjects/EmployeeMyProjects";
+import EmployeeMyTasks from "../EmployeeMyTasks/EmployeeMyTasks";
+import { getEmployeeProfile } from "../api/employeeProfileApi";
+import { getEmployeeTasks } from "../api/employeeTasksApi";
 import "./EmployeeDashboard.css";
 
 const API_BASE_URL = (

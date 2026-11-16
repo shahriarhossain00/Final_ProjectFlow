@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
 import "./Dashboard.css";
 
-import KanbanBoard from "./KanbanBoard";
-import CreateProject from "./CreateProject";
-import TaskList from "./TaskList";
-import TaskDetails from "./TaskDetails";
-import AllMembers from "./AllMembers";
-import ProjectMembers from "./ProjectMembers";
-import TaskSubmissions from "./TaskSubmissions";
+import KanbanBoard from "../KanbanBoard/KanbanBoard";
+import CreateProject from "../CreateProject/CreateProject";
+import TaskList from "../TaskList/TaskList";
+import TaskDetails from "../TaskDetails/TaskDetails";
+import AllMembers from "../AllMembers/AllMembers";
+import ProjectMembers from "../ProjectMembers/ProjectMembers";
+import TaskSubmissions from "../TaskSubmissions/TaskSubmissions";
 
-import { getProjects, toUiProject } from "../services/projectApi";
+import { getProjects, toUiProject } from "../../services/projectApi";
 
-import { getTasks, getEmployees } from "../services/taskApi";
+import { getTasks, getEmployees } from "../../services/taskApi";
 
 function getSavedArray(key) {
   try {

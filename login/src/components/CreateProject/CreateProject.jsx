@@ -7,7 +7,7 @@ import {
   deleteProject,
   getDepartments,
   toUiProject,
-} from "../services/projectApi";
+} from "../../services/projectApi";
 
 function CreateProject({
   projects,
