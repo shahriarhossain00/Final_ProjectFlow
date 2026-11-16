@@ -125,11 +125,11 @@ function CreateProject({
 
       console.log("Create Project Request:", payload);
 
-      const savedProject = await createProject(payload);
+      const savedProject = await createProject(payload); //project create
 
       console.log("Create Project Response:", savedProject);
 
-      onSaveProject(toUiProject(savedProject));
+      onSaveProject(toUiProject(savedProject)); 
 
       setProjectName("");
       setDescription("");
@@ -189,6 +189,7 @@ function CreateProject({
     setEditingBusy(true);
 
     try {
+      //edit
       const savedProject = await updateProject(editingProject.id, {
         name,
         description: editedDescription.trim(),

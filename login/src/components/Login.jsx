@@ -14,7 +14,7 @@ function Login({
 }) {
   const [mode, setMode] = useState(initialMode);
   const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
+
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -27,7 +27,6 @@ function Login({
     setMode(nextMode);
     setError("");
     setUsername("");
-    setEmail("");
     setPassword("");
     setShowPassword(false);
   };
@@ -195,24 +194,6 @@ function Login({
             disabled={loading}
             required
           />
-
-          {/* Admin Email */}
-          {mode === "admin" && (
-            <>
-              <label htmlFor="email">Email</label>
-
-              <input
-                id="email"
-                type="email"
-                autoComplete="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                disabled={loading}
-                required
-              />
-            </>
-          )}
 
           {/* Password */}
           <label htmlFor="password">Password</label>
