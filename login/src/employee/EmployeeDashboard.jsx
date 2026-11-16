@@ -19,9 +19,15 @@ function getProfilePictureUrl(picture) {
     const imageUrl = new URL(picture, `${API_BASE_URL}/`);
     const apiOrigin = new URL(API_BASE_URL).origin;
 
+    const isBackendImage = imageUrl.origin === apiOrigin;
+
+    const isCloudinaryImage =
+      imageUrl.protocol === "https:" &&
+      imageUrl.hostname === "res.cloudinary.com";
+
     if (
-      imageUrl.origin !== apiOrigin ||
-      !["http:", "https:"].includes(imageUrl.protocol)
+      !["http:", "https:"].includes(imageUrl.protocol) ||
+      (!isBackendImage && !isCloudinaryImage)
     ) {
       return null;
     }
@@ -540,6 +546,10 @@ function EmployeeDashboard({
             <EmployeeProfile
               user={user}
               onPasswordChanged={onPasswordChanged}
+              onProfilePictureUpdated={(picture) => {
+                setProfilePicture(getProfilePictureUrl(picture));
+                setPictureError(false);
+              }}
             />
           )}
         </section>

@@ -36,7 +36,7 @@ function getImageUrl(value) {
   }
 }
 
-function EmployeeProfile({ user, onPasswordChanged }) {
+function EmployeeProfile({ user, onPasswordChanged, onProfilePictureUpdated }) {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -121,6 +121,9 @@ function EmployeeProfile({ user, onPasswordChanged }) {
 
       setProfile(updatedProfile);
       setImageError(false);
+      if (typeof onProfilePictureUpdated === "function") {
+        onProfilePictureUpdated(updatedProfile?.profile_picture);
+      }
       setSelectedFile(null);
 
       if (fileInputRef.current) {
