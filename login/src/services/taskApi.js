@@ -1,3 +1,4 @@
+import { resolvePaginationUrl } from "./pagination";
 const API_BASE_URL = (
   import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000"
 ).replace(/\/$/, "");
@@ -94,7 +95,7 @@ async function fetchAllPages(path, signal) {
 
     results.push(...data.results);
 
-    nextUrl = data.next ? new URL(data.next, url.href).href : null;
+    nextUrl = resolvePaginationUrl(data.next, url.href, API_BASE_URL);
   }
 
   return results;

@@ -8,38 +8,25 @@ const API_BASE_URL = (
 
 // Extract file URL from the task response
 function getTaskFile(task) {
-  const file =
-    task.file ??
-    task.attachment ??
-    task.document ??
-    task.task_file ??
-    task.attachments?.[0] ??
-    null;
+  const file = task.task_file;
 
-  if (!file) {
-    return null;
-  }
-
-  const filePath =
-    typeof file === "string" ? file : (file.url ?? file.file ?? null);
-
-  if (typeof filePath !== "string" || !filePath.trim()) {
+  if (!file || typeof file !== "string") {
     return null;
   }
 
   try {
-    const fileUrl = new URL(filePath, `${API_BASE_URL}/`);
+    const url = new URL(file, `${API_BASE_URL}/`);
 
-    // Allow only files served by our backend
-    if (fileUrl.origin !== new URL(API_BASE_URL).origin) {
+    const isBackendUrl = url.origin === new URL(API_BASE_URL).origin;
+
+    const isCloudinaryUrl =
+      url.protocol === "https:" && url.hostname === "res.cloudinary.com";
+
+    if (!isBackendUrl && !isCloudinaryUrl) {
       return null;
     }
 
-    if (!["http:", "https:"].includes(fileUrl.protocol)) {
-      return null;
-    }
-
-    return fileUrl.href;
+    return url.href;
   } catch {
     return null;
   }
@@ -62,6 +49,14 @@ function EmployeeMyProjects({ user }) {
 
         // Log metadata to verify the response fields
         console.log("Employee Tasks API Response:", data);
+        console.table(
+          data.map((task) => ({
+            taskId: task.id,
+            title: task.title,
+            assignedTo: task.assigned_to,
+            taskFile: task.task_file,
+          })),
+        );
 
         // Filter tasks assigned to the logged-in employee
         const employeeTasks = data.filter((task) => {

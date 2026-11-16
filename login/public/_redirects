@@ -1,0 +1,4 @@
+/api/*     https://project-management-system-ekr7.onrender.com/api/:splat     200
+/project/* https://project-management-system-ekr7.onrender.com/project/:splat 200
+/media/*   https://project-management-system-ekr7.onrender.com/media/:splat   200
+/*         /index.html 200
