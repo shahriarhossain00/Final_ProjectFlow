@@ -1,6 +1,17 @@
+
 from django.db import models
 from django.conf import settings
 
+import os
+from django.core.files.storage import FileSystemStorage
+
+
+def get_task_storage():
+    if os.getenv("CLOUDINARY_URL"):
+        from cloudinary_storage.storage import RawMediaCloudinaryStorage
+        return RawMediaCloudinaryStorage()
+
+    return FileSystemStorage()
 # Create your models here.
 class Department(models.Model):
     name = models.CharField(max_length=100)
@@ -19,6 +30,13 @@ class Project(models.Model):
         ('Completed', 'Completed'),
         ('On Hold', 'On Hold'),
     ]
+    PRIORITY_CHOICES = [
+        ("Low", "Low"),
+        ("Medium", "Medium"),
+        ("High", "High"),
+        ("Urgent", "Urgent"),
+    ]
+
     status = models.CharField(max_length=20, choices=status_choices, default='Not Started')
     manager=models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='managed_projects')
     description = models.TextField(blank=True, null=True)
@@ -26,8 +44,9 @@ class Project(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     start_date = models.DateField(blank=True, null=True)
+    priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='Medium')
     finish_date = models.DateField(blank=True, null=True)
-    
+
     def __str__(self):
         return self.name
 class Tasks(models.Model):
@@ -42,7 +61,7 @@ class Tasks(models.Model):
         ('Completed', 'Completed'),
         ('On Hold', 'On Hold'),
     ]
-    task_file= models.FileField(upload_to='task_files/', blank=True, null=True)
+    task_file= models.FileField(upload_to='task_files/', storage=get_task_storage(), blank=True, null=True)
     status = models.CharField(max_length=20, choices=status_choices, default='Not Started')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -108,7 +127,7 @@ class Notification(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
-       
+
 
     def __str__(self):
         return f"{self.user.username} - {self.message[:30]}"
@@ -121,7 +140,12 @@ class TaskSubmission(models.Model):
     )
     message = models.TextField(blank=True)
     url = models.URLField(blank=True)
-    file = models.FileField(upload_to='task_submissions/', blank=True, null=True)
+    file = models.FileField(
+    upload_to='task_submissions/',
+    storage=get_task_storage(),
+    blank=True,
+    null=True
+)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
