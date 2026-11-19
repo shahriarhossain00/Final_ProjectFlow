@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
+
 import EmployeeProfile from "../EmployeeProfile/EmployeeProfile";
 import EmployeeMyProjects from "../EmployeeMyProjects/EmployeeMyProjects";
 import EmployeeMyTasks from "../EmployeeMyTasks/EmployeeMyTasks";
+import SearchAndFilter from "../../components/SearchAndFilter/SearchAndFilter";
+
 import { getEmployeeProfile } from "../api/employeeProfileApi";
 import { getEmployeeTasks } from "../api/employeeTasksApi";
+
 import "./EmployeeDashboard.css";
 
 const API_BASE_URL = (
@@ -114,6 +118,7 @@ function EmployeeDashboard({
     { id: "dashboard", label: "Dashboard" },
     { id: "projects", label: "My Projects" },
     { id: "tasks", label: "My Tasks" },
+    { id: "search-filter", label: "Search & Filter" },
     { id: "profile", label: "My Profile" },
   ];
 
@@ -121,7 +126,7 @@ function EmployeeDashboard({
   const employeeId = user?.id ?? "N/A";
   const employeeInitial = employeeName.charAt(0).toUpperCase();
 
-  // Load profile picture
+  // Load profile picture.
   useEffect(() => {
     let active = true;
 
@@ -150,7 +155,7 @@ function EmployeeDashboard({
     };
   }, [user?.id]);
 
-  // Load assigned tasks whenever Dashboard is opened
+  // Load assigned tasks whenever Dashboard is opened.
   useEffect(() => {
     if (activePage !== "dashboard") {
       return undefined;
@@ -159,6 +164,9 @@ function EmployeeDashboard({
     const controller = new AbortController();
 
     async function loadDashboardData() {
+      setDashboardLoading(true);
+      setDashboardError("");
+
       try {
         const data = await getEmployeeTasks(user?.id, controller.signal);
 
@@ -169,13 +177,11 @@ function EmployeeDashboard({
         );
 
         setAssignedTasks(myTasks);
-        setDashboardError("");
-
-        console.log("Employee Dashboard Tasks:", myTasks);
       } catch (error) {
         if (controller.signal.aborted) return;
 
         console.error("Dashboard API Error:", error);
+
         setDashboardError(error.message || "Failed to load dashboard.");
       } finally {
         if (!controller.signal.aborted) {
@@ -189,7 +195,7 @@ function EmployeeDashboard({
     return () => controller.abort();
   }, [user?.id, activePage]);
 
-  // Build unique projects from assigned tasks
+  // Build unique projects from assigned tasks.
   const assignedProjects = useMemo(() => {
     const projectMap = new Map();
 
@@ -209,7 +215,6 @@ function EmployeeDashboard({
       }
 
       const project = projectMap.get(key);
-
       project.taskCount += 1;
     });
 
@@ -310,6 +315,7 @@ function EmployeeDashboard({
               key={item.id}
               type="button"
               className={activePage === item.id ? "employee-nav-active" : ""}
+              aria-current={activePage === item.id ? "page" : undefined}
               onClick={() => handleNavigate(item.id)}
             >
               {item.label}
@@ -542,6 +548,11 @@ function EmployeeDashboard({
 
           {/* My Tasks */}
           {activePage === "tasks" && <EmployeeMyTasks user={user} />}
+
+          {/* Search & Filter */}
+          {activePage === "search-filter" && (
+            <SearchAndFilter role="Employee" userId={user?.id} />
+          )}
 
           {/* My Profile */}
           {activePage === "profile" && (

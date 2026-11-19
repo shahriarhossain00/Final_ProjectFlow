@@ -17,44 +17,71 @@ export async function getEmployeeTasks(userId, signal) {
     throw new Error("Invalid employee ID.");
   }
 
-  let response;
+  const apiOrigin = new URL(API_BASE_URL).origin;
 
-  try {
-    response = await fetch(`${API_BASE_URL}/project/tasks/user/${id}/`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        Accept: "application/json",
-      },
-      signal,
-    });
-  } catch (error) {
-    if (error.name === "AbortError") {
-      throw error;
+  let nextUrl = `${API_BASE_URL}/project/tasks/user/${id}/`;
+
+  const tasks = [];
+  const visitedUrls = new Set();
+
+  while (nextUrl) {
+    const url = new URL(nextUrl, API_BASE_URL);
+
+    if (url.origin !== apiOrigin) {
+      throw new Error("Unexpected pagination host.");
     }
 
-    throw new Error("Cannot connect to the server.", {
-      cause: error,
-    });
-  }
+    if (visitedUrls.has(url.href) || visitedUrls.size >= 100) {
+      throw new Error("Invalid pagination response.");
+    }
 
-  const data = await response.json().catch(() => null);
+    visitedUrls.add(url.href);
 
-  if (response.status === 401) {
-    throw new Error("Session expired. Please log in again.");
-  }
+    let response;
 
-  if (!response.ok) {
-    throw new Error(
-      data?.detail || `Failed to load tasks (${response.status}).`,
-    );
-  }
+    try {
+      response = await fetch(url.href, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: "application/json",
+        },
+        signal,
+      });
+    } catch (error) {
+      if (error.name === "AbortError") {
+        throw error;
+      }
 
-  // Support plain arrays and paginated DRF responses.
-  const tasks = Array.isArray(data) ? data : data?.results;
+      throw new Error("Cannot connect to the server.", {
+        cause: error,
+      });
+    }
 
-  if (!Array.isArray(tasks)) {
-    throw new Error("Unexpected task response format.");
+    const data = await response.json().catch(() => null);
+
+    if (response.status === 401) {
+      throw new Error("Session expired. Please log in again.");
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        data?.detail || `Failed to load tasks (${response.status}).`,
+      );
+    }
+
+    if (Array.isArray(data)) {
+      tasks.push(...data);
+      break;
+    }
+
+    if (!Array.isArray(data?.results)) {
+      throw new Error("Unexpected task response format.");
+    }
+
+    tasks.push(...data.results);
+
+    nextUrl = data.next ? new URL(data.next, url.href).href : null;
   }
 
   return tasks;

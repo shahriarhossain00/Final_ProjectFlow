@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import "./ManagerDashboard.css";
+
 import ManagerProjects from "../ManagerProjects/ManagerProjects";
-import { getProjects } from "../api/managerApi";
-import { getTasks } from "../api/managerApi";
+import { getProjects, getTasks } from "../api/managerApi";
+import SearchAndFilter from "../../components/SearchAndFilter/SearchAndFilter";
+
 // Manager's main workspace.
 function ManagerDashboard({ user, onLogout, isLoggingOut }) {
   const [activeSection, setActiveSection] = useState("overview");
@@ -19,62 +21,81 @@ function ManagerDashboard({ user, onLogout, isLoggingOut }) {
 
   // Fetch projects when the dashboard loads.
   useEffect(() => {
+    let cancelled = false;
+
     const loadProjects = async () => {
       try {
         setIsLoadingProjects(true);
         setProjectError("");
 
         const projectData = await getProjects();
-        setProjects(projectData);
+
+        if (!cancelled) {
+          setProjects(projectData);
+        }
       } catch (error) {
-        console.error("Failed to load manager projects:", error);
-        setProjectError(error.message || "Failed to load projects.");
+        if (!cancelled) {
+          console.error("Failed to load manager projects:", error);
+          setProjectError(error.message || "Failed to load projects.");
+        }
       } finally {
-        setIsLoadingProjects(false);
+        if (!cancelled) {
+          setIsLoadingProjects(false);
+        }
       }
     };
 
     loadProjects();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Fetch tasks when the dashboard loads.
   useEffect(() => {
+    let cancelled = false;
+
     const loadTasks = async () => {
       try {
         setIsLoadingTasks(true);
         setTaskError("");
 
         const taskData = await getTasks();
-        console.log(
-          "Task fields:",
-          taskData.map((task) => Object.keys(task)),
-        );
 
-        console.table(
-          taskData.map((task) => ({
-            title: task.title,
-            assigned_to: task.assigned_to,
-            project_title: task.project_title,
-            status: task.status,
-          })),
-        );
-        setTasks(taskData);
+        if (!cancelled) {
+          setTasks(taskData);
+        }
       } catch (error) {
-        console.error("Failed to load manager tasks:", error);
-        setTaskError(error.message || "Failed to load tasks.");
+        if (!cancelled) {
+          console.error("Failed to load manager tasks:", error);
+          setTaskError(error.message || "Failed to load tasks.");
+        }
       } finally {
-        setIsLoadingTasks(false);
+        if (!cancelled) {
+          setIsLoadingTasks(false);
+        }
       }
     };
 
     loadTasks();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
   // Navigation items available to the Manager.
   const navigationItems = [
     { id: "overview", label: "Overview" },
     { id: "projects", label: "My Projects" },
     { id: "tasks", label: "My Tasks" },
+    { id: "search-filter", label: "Search & Filter" },
   ];
+
+  const activeTitle =
+    navigationItems.find((item) => item.id === activeSection)?.label ||
+    "Dashboard";
 
   return (
     <div className="manager-layout">
@@ -82,6 +103,7 @@ function ManagerDashboard({ user, onLogout, isLoggingOut }) {
       <aside className="manager-sidebar">
         <div className="manager-brand">
           <div className="manager-brand-icon">PF</div>
+
           <div>
             <h2>ProjectFlow</h2>
             <span>Manager Workspace</span>
@@ -99,6 +121,7 @@ function ManagerDashboard({ user, onLogout, isLoggingOut }) {
                   ? "manager-nav-item active"
                   : "manager-nav-item"
               }
+              aria-current={activeSection === item.id ? "page" : undefined}
               onClick={() => setActiveSection(item.id)}
             >
               {item.label}
@@ -135,13 +158,7 @@ function ManagerDashboard({ user, onLogout, isLoggingOut }) {
         <header className="manager-header">
           <div>
             <p className="manager-eyebrow">Manager Workspace</p>
-            <h1>
-              {activeSection === "overview"
-                ? "Dashboard"
-                : activeSection === "projects"
-                  ? "My Projects"
-                  : "My Tasks"}
-            </h1>
+            <h1>{activeSection === "overview" ? "Dashboard" : activeTitle}</h1>
           </div>
 
           <div className="manager-header-user">Welcome, {user?.username}</div>
@@ -187,14 +204,17 @@ function ManagerDashboard({ user, onLogout, isLoggingOut }) {
 
               <div className="manager-stat-card">
                 <span>My Tasks</span>
+
                 <strong>
                   {isLoadingTasks ? "..." : taskError ? "—" : tasks.length}
                 </strong>
+
                 <small>Tasks across your projects</small>
               </div>
 
               <div className="manager-stat-card">
                 <span>Team Members</span>
+
                 <strong>
                   {isLoadingTasks
                     ? "..."
@@ -210,6 +230,7 @@ function ManagerDashboard({ user, onLogout, isLoggingOut }) {
                             .filter(Boolean),
                         ).size}
                 </strong>
+
                 <small>Unique members assigned to tasks</small>
               </div>
             </div>
@@ -328,6 +349,11 @@ function ManagerDashboard({ user, onLogout, isLoggingOut }) {
               </div>
             )}
           </section>
+        )}
+
+        {/* Manager Search & Filter */}
+        {activeSection === "search-filter" && (
+          <SearchAndFilter role="Manager" />
         )}
       </main>
     </div>
