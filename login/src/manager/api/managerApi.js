@@ -129,3 +129,71 @@ export async function getUserTasks(userId) {
   const response = await apiRequest(`/project/tasks/user/${userId}/`);
   return normalizeList(response);
 }
+
+import { resolvePaginationUrl } from "../../services/pagination";
+
+export async function getMyManagedProjects(signal) {
+  const token = localStorage.getItem("accessToken");
+
+  if (!token) {
+    throw new Error("Session expired. Please log in again.");
+  }
+
+  const baseUrl = new URL(API_BASE_URL);
+  const allowedOrigin = baseUrl.origin;
+
+  let nextUrl = new URL("/project/all-projects/manager/", baseUrl).href;
+
+  const projects = [];
+  const visited = new Set();
+
+  while (nextUrl) {
+    const url = new URL(nextUrl);
+
+    if (url.origin !== allowedOrigin) {
+      throw new Error("Unexpected pagination host.");
+    }
+
+    if (visited.has(url.href) || visited.size >= 100) {
+      throw new Error("Invalid pagination response.");
+    }
+
+    visited.add(url.href);
+
+    const response = await fetch(
+      `${API_BASE_URL}${url.pathname}${url.search}`,
+      {
+        signal,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        response.status === 403
+          ? "You do not have permission."
+          : `Failed to load managed projects (${response.status}).`,
+      );
+    }
+
+    const data = await response.json();
+
+    if (Array.isArray(data)) {
+      projects.push(...data);
+      break;
+    }
+
+    if (!data || !Array.isArray(data.results)) {
+      throw new Error("Unexpected API response format.");
+    }
+
+    projects.push(...data.results);
+
+    nextUrl = resolvePaginationUrl(data.next, url.href, API_BASE_URL);
+  }
+
+  return projects;
+}

@@ -1,3 +1,4 @@
+import SearchAndFilter from "../SearchAndFilter/SearchAndFilter";
 import { useEffect, useState } from "react";
 import "./Dashboard.css";
 
@@ -10,13 +11,11 @@ import ProjectMembers from "../ProjectMembers/ProjectMembers";
 import TaskSubmissions from "../TaskSubmissions/TaskSubmissions";
 
 import { getProjects, toUiProject } from "../../services/projectApi";
-
 import { getTasks, getEmployees } from "../../services/taskApi";
 
 function getSavedArray(key) {
   try {
     const saved = JSON.parse(localStorage.getItem(key) || "[]");
-
     return Array.isArray(saved) ? saved : [];
   } catch {
     return [];
@@ -29,16 +28,14 @@ const navigation = [
   { id: "create-project", label: "Create Project", icon: "▣" },
   { id: "project-members", label: "Project Members", icon: "♧" },
   { id: "tasks", label: "Tasks", icon: "☑" },
+  { id: "search-filter", label: "Search & Filter", icon: "⌕" },
   { id: "kanban", label: "Kanban Board", icon: "▥" },
   { id: "task-details", label: "Task Details", icon: "☷" },
-
-  // New menu
   {
     id: "task-submissions",
     label: "Task Submissions",
     icon: "▤",
   },
-
   { id: "settings", label: "Settings", icon: "⚙" },
 ];
 
@@ -150,7 +147,6 @@ function Dashboard({ onLogout }) {
         if (controller.signal.aborted) return;
 
         console.error("Project Fetch Error:", error);
-
         setProjectsError(error.message || "Failed to load projects.");
       } finally {
         if (!controller.signal.aborted) {
@@ -188,7 +184,6 @@ function Dashboard({ onLogout }) {
         if (controller.signal.aborted) return;
 
         console.error("Dashboard Fetch Error:", error);
-
         setDashboardError(error.message || "Failed to load dashboard.");
       } finally {
         if (!controller.signal.aborted) {
@@ -359,8 +354,12 @@ function Dashboard({ onLogout }) {
         (member) => String(member.id) === String(replacementMemberId),
       );
 
-      const replacementAssigned = memberships.some(
-        (item) => String(item.memberId) === String(replacementMemberId),
+      const replacementAssigned = members.some(
+        (item) =>
+          String(item.id) === String(replacementMemberId) &&
+          memberships.some(
+            (membership) => String(membership.memberId) === String(item.id),
+          ),
       );
 
       if (
@@ -535,12 +534,14 @@ function Dashboard({ onLogout }) {
         </header>
 
         <section className="dashboard-content">
+          {/* Search & Filter */}
+          {activePage === "search-filter" && <SearchAndFilter />}
+
           {/* Dashboard Overview */}
           {activePage === "dashboard" && (
             <div className="dashboard-overview">
               <div className="dashboard-heading">
                 <h1>Welcome to your Dashboard!</h1>
-
                 <p>Overview of projects, members and tasks</p>
               </div>
 
@@ -627,7 +628,6 @@ function Dashboard({ onLogout }) {
                                     key={employee.id}
                                   >
                                     <span>{employee.name}</span>
-
                                     <span>{employee.role}</span>
                                   </div>
                                 ))
@@ -769,7 +769,7 @@ function Dashboard({ onLogout }) {
             />
           )}
 
-          {/* Task Submissions - New */}
+          {/* Task Submissions */}
           {activePage === "task-submissions" && <TaskSubmissions />}
 
           {/* Settings */}
