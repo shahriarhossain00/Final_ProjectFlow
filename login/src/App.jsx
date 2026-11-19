@@ -5,15 +5,17 @@ import Dashboard from "./components/Dashboard/Dashboard";
 
 import Register from "./employee/Register/Register";
 import EmployeeDashboard from "./employee/EmployeeDashboard/EmployeeDashboard";
-
 import ForgotPassword from "./employee/ForgotPassword/ForgotPassword";
 import ResetPassword from "./employee/ResetPassword/ResetPassword";
+
+// New Manager dashboard
+import ManagerDashboard from "./manager/ManagerDashboard/ManagerDashboard";
 
 const API_BASE_URL = (
   import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000"
 ).replace(/\/$/, "");
 
-// Remove authentication information from localStorage
+// Clear all stored authentication information.
 function clearAuthStorage() {
   localStorage.removeItem("accessToken");
   localStorage.removeItem("refreshToken");
@@ -27,36 +29,35 @@ function App() {
   const [loginMode, setLoginMode] = useState("admin");
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-
   const [loginMessage, setLoginMessage] = useState("");
-
-  // Keep the reset email temporarily in React state
   const [resetEmail, setResetEmail] = useState("");
 
-  // Handle successful login
+  // Handle login success and redirect based on verified role.
   const handleLoginSuccess = ({ user, access, refresh }) => {
+    const role = user.role;
+
+    // Store authentication tokens and basic user information.
     localStorage.setItem("accessToken", access);
     localStorage.setItem("refreshToken", refresh);
-
     localStorage.setItem("userId", String(user.id));
     localStorage.setItem("username", user.username);
-    localStorage.setItem("role", user.is_staff ? "Admin" : "Employee");
+    localStorage.setItem("role", role);
 
     setCurrentUser(user);
     setLoginMessage("");
     setResetEmail("");
 
-    setPage(user.is_staff ? "admin-dashboard" : "employee-dashboard");
+    // Redirect the user to their role-specific dashboard.
+    if (role === "Admin") {
+      setPage("admin-dashboard");
+    } else if (role === "Manager") {
+      setPage("manager-dashboard");
+    } else {
+      setPage("employee-dashboard");
+    }
   };
 
-  // Redirect to Employee Login after registration
-  const handleRegisterSuccess = () => {
-    setLoginMode("employee");
-    setLoginMessage("");
-    setPage("login");
-  };
-
-  // Existing logout flow
+  // Handle logout using the existing backend logout API.
   const handleLogout = async () => {
     if (isLoggingOut) return;
 
@@ -82,16 +83,10 @@ function App() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-
-        console.error("Logout API Error:", {
-          status: response.status,
-          message: errorData?.detail || "Unknown server error",
-        });
-
         throw new Error(`Logout failed: ${response.status}`);
       }
 
+      // Remove stored tokens after successful logout.
       clearAuthStorage();
 
       setCurrentUser(null);
@@ -107,20 +102,25 @@ function App() {
     }
   };
 
-  // After successfully changing password inside My Profile
+  // Redirect to Employee Login after registration.
+  const handleRegisterSuccess = () => {
+    setLoginMode("employee");
+    setLoginMessage("");
+    setPage("login");
+  };
+
+  // Logout the user after password has been changed.
   const handlePasswordChanged = () => {
     clearAuthStorage();
 
     setCurrentUser(null);
     setLoginMode("employee");
     setResetEmail("");
-
     setLoginMessage("Password updated successfully. Please log in again.");
-
     setPage("login");
   };
 
-  // Open Forgot Password page
+  // Open the Forgot Password page.
   const handleForgotPassword = () => {
     setLoginMessage("");
     setResetEmail("");
@@ -128,13 +128,13 @@ function App() {
     setPage("forgot-password");
   };
 
-  // After successfully requesting an OTP
+  // Store email after OTP has been sent.
   const handleOtpSent = (email) => {
     setResetEmail(email);
     setPage("reset-password");
   };
 
-  // After successful password reset
+  // Redirect after successful password reset.
   const handleResetSuccess = () => {
     clearAuthStorage();
 
@@ -149,12 +149,12 @@ function App() {
     setPage("login");
   };
 
-  // Back to Forgot Password to request a new OTP
+  // Return to the Forgot Password page.
   const handleBackToForgot = () => {
     setPage("forgot-password");
   };
 
-  // Back to Employee Login from Forgot or Reset page
+  // Return to Employee Login.
   const handleBackToEmployeeLogin = () => {
     setResetEmail("");
     setLoginMessage("");
@@ -162,7 +162,7 @@ function App() {
     setPage("login");
   };
 
-  // Back to Employee Login from Register
+  // Return to Employee Login from registration.
   const handleBackToLogin = () => {
     setLoginMode("employee");
     setLoginMessage("");
@@ -217,10 +217,20 @@ function App() {
         <Dashboard onLogout={handleLogout} isLoggingOut={isLoggingOut} />
       )}
 
+      {/* Manager Dashboard */}
+      {page === "manager-dashboard" && currentUser?.role === "Manager" && (
+        <ManagerDashboard
+          user={currentUser}
+          onLogout={handleLogout}
+          isLoggingOut={isLoggingOut}
+        />
+      )}
+
       {/* Employee Dashboard */}
       {page === "employee-dashboard" &&
         currentUser &&
-        !currentUser.is_staff && (
+        !currentUser.is_staff &&
+        currentUser.role === "Employee" && (
           <EmployeeDashboard
             user={currentUser}
             onLogout={handleLogout}
