@@ -1,88 +1,38 @@
-from django.urls import path
-
-from . import views
 from .submission_views import SecureTaskSubmissionListView
+
+from django.contrib import admin
+from django.urls import include, path
+from . import views
 
 
 urlpatterns = [
+    path('departments/', views.DepartmentListView.as_view(), name='department-list'),
+    path('departments/<int:pk>/', views.DepartmentDetailView.as_view(), name='department-detail'),
+    path('projects/', views.ProjectListView.as_view(), name='project-list'),
+    path('projects/<int:pk>/', views.ProjectDetailView.as_view(), name='project-detail'),
+    path('tasks/', views.TaskListView.as_view(), name='task-list'),
+    path('tasks/<int:pk>/', views.TaskDetailView.as_view(), name='task-detail'),
+    path('departments/<int:department_id>/projects/', views.DepartmentProjectsListView.as_view(), name='department-projects-list'),
+    path('chatboxes/admins/', views.Chatboxes_For_Admins.as_view(), name='chatboxes-for-admins'),
+    path('chatboxes/admins/<int:pk>/', views.ChatboxDetailView_FOR_Admins.as_view(), name='chatbox-detail'),
+    path('chatboxes/<int:project_id>/', views.ChatboxListView.as_view(), name='chatbox-detail'),
+    path('tasks/user/<int:user_id>/', views.ALL_Tasks_OF_A_User.as_view(), name='all-tasks-of-a-user'),
+
+    path('messages/', views.MessegaseListView.as_view(), name='message-list'),
+    path('messages/<int:pk>/', views.MessageDetailView.as_view(), name='message-detail'),
+    path('notifications/', views.NotificationListView.as_view(), name='notification-list'),
+    path('notifications/<int:pk>/read/', views.NotificationMarkReadView.as_view(), name='notification-read'),
+    path('tasks/submissions/', SecureTaskSubmissionListView.as_view(), name='task-submission-list'),
+
+    path('all-projects/manager/', views.ALL_Projects_OF_A_Manager.as_view(), name='all-projects-of-a-manager'),
+
+    path('projects/<int:project_id>/submissions/', views.ProjectSubmissionsListView.as_view(), name='project-submissions'),
+
+    path('projects/<int:project_id>/health/', views.ProjectHealthAPIView.as_view(), name='project-health'),
     path(
-        "departments/",
-        views.DepartmentListView.as_view(),
-        name="department-list",
+    'projects/<int:project_id>/chat-summary/',
+    views.ProjectChatSummaryAPIView.as_view(),
+    name='project-chat-summary'
     ),
-    path(
-        "departments/<int:pk>/",
-        views.DepartmentDetailView.as_view(),
-        name="department-detail",
-    ),
-    path(
-        "projects/",
-        views.ProjectListView.as_view(),
-        name="project-list",
-    ),
-    path(
-        "projects/<int:pk>/",
-        views.ProjectDetailView.as_view(),
-        name="project-detail",
-    ),
-    path(
-        "tasks/",
-        views.TaskListView.as_view(),
-        name="task-list",
-    ),
-    path(
-        "tasks/<int:pk>/",
-        views.TaskDetailView.as_view(),
-        name="task-detail",
-    ),
-    path(
-        "departments/<int:department_id>/projects/",
-        views.DepartmentProjectsListView.as_view(),
-        name="department-projects-list",
-    ),
-    path(
-        "chatboxes/admins/",
-        views.Chatboxes_For_Admins.as_view(),
-        name="chatboxes-for-admins",
-    ),
-    path(
-        "chatboxes/admins/<int:pk>/",
-        views.ChatboxDetailView_FOR_Admins.as_view(),
-        name="chatbox-detail",
-    ),
-    path(
-        "chatboxes/<int:project_id>/",
-        views.ChatboxListView.as_view(),
-        name="chatbox-detail",
-    ),
-    path(
-        "tasks/user/<int:user_id>/",
-        views.ALL_Tasks_OF_A_User.as_view(),
-        name="all-tasks-of-a-user",
-    ),
-    path(
-        "messages/",
-        views.MessegaseListView.as_view(),
-        name="message-list",
-    ),
-    path(
-        "messages/<int:pk>/",
-        views.MessageDetailView.as_view(),
-        name="message-detail",
-    ),
-    path(
-        "notifications/",
-        views.NotificationListView.as_view(),
-        name="notification-list",
-    ),
-    path(
-        "notifications/<int:pk>/read/",
-        views.NotificationMarkReadView.as_view(),
-        name="notification-read",
-    ),
-    path(
-        "tasks/submissions/",
-        SecureTaskSubmissionListView.as_view(),
-        name="task-submission-list",
-    ),
+
 ]

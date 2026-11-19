@@ -1,7 +1,12 @@
-from rest_framework import serializers
+from requests import Response
+from rest_framework import serializers, status
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 import re
+
+
+from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny
 User = get_user_model()
 
 
@@ -101,12 +106,13 @@ class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(
         write_only=True,
         required=True,
+
     )
 
     new_password = serializers.CharField(
         write_only=True,
         required=True,
-        validators=[validate_password],
+        style={"input_type": "password"}
     )
 
     confirm_password = serializers.CharField(
@@ -164,6 +170,7 @@ class ChangePasswordSerializer(serializers.Serializer):
             })
 
         return attrs
+
 class ForgotPasswordSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
 
@@ -242,6 +249,11 @@ class ProfileSerializer(serializers.ModelSerializer):
         source="user.username",
         read_only=True
     )
+    user_id=serializers.IntegerField(
+        source="user.id",
+
+        read_only=True
+    )
 
     class Meta:
         model = Profile
@@ -250,6 +262,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             "username",
             "role",
             "profile_picture",
+            "user_id",
         ]
         read_only_fields = [
             "id",
@@ -269,3 +282,5 @@ class ProfileSerializer(serializers.ModelSerializer):
             )
 
         return value
+class GoogleLoginSerializer(serializers.Serializer):
+    id_token = serializers.CharField()

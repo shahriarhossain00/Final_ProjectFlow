@@ -1,0 +1,456 @@
+/* Manager project page */
+.manager-projects-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Page header */
+.manager-projects-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.manager-projects-header h2 {
+  margin: 4px 0 8px;
+  font-size: 24px;
+  color: #0f172a;
+}
+
+.manager-projects-header p {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.manager-projects-eyebrow {
+  color: #2563eb !important;
+  font-size: 11px !important;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+}
+
+/* Create project button */
+.manager-project-create-button {
+  padding: 12px 18px;
+  border: none;
+  border-radius: 9px;
+  background: #2563eb;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.manager-project-create-button:hover {
+  background: #1d4ed8;
+}
+
+/* API feedback messages */
+.manager-project-message {
+  padding: 13px 16px;
+  border-radius: 9px;
+  font-size: 14px;
+  white-space: pre-wrap;
+}
+
+.manager-project-message.error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+}
+
+.manager-project-message.success {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #15803d;
+}
+
+/* Project creation form */
+.manager-project-form-card {
+  padding: 24px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: white;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+}
+
+.manager-project-form-heading {
+  margin-bottom: 22px;
+}
+
+.manager-project-form-heading h3 {
+  margin: 0 0 6px;
+  font-size: 19px;
+}
+
+.manager-project-form-heading p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+/* Responsive form grid */
+.manager-project-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.manager-project-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.manager-project-field.full-width {
+  grid-column: 1 / -1;
+}
+
+.manager-project-field label {
+  color: #334155;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.manager-project-field input,
+.manager-project-field select,
+.manager-project-field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 13px;
+  border: 1px solid #dbe3ed;
+  border-radius: 9px;
+  background: white;
+  color: #0f172a;
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+}
+
+.manager-project-field input:focus,
+.manager-project-field select:focus,
+.manager-project-field textarea:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.manager-project-field textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Form actions */
+.manager-project-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.manager-project-cancel-button,
+.manager-project-submit-button {
+  padding: 11px 17px;
+  border-radius: 9px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.manager-project-cancel-button {
+  border: 1px solid #dbe3ed;
+  background: white;
+  color: #475569;
+}
+
+.manager-project-submit-button {
+  border: none;
+  background: #2563eb;
+  color: white;
+}
+
+.manager-project-submit-button:hover {
+  background: #1d4ed8;
+}
+
+.manager-project-submit-button:disabled,
+.manager-project-cancel-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Project list */
+.manager-project-list-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.manager-project-list-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.manager-project-list-heading h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.manager-project-list-heading span {
+  color: #64748b;
+  font-size: 13px;
+}
+
+/* Project cards grid */
+.manager-project-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.manager-project-card {
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+  border-radius: 13px;
+  background: white;
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.manager-project-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+}
+
+.manager-project-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.manager-project-card-top h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #0f172a;
+}
+
+/* Priority badges */
+.manager-project-priority {
+  flex-shrink: 0;
+  padding: 5px 9px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.priority-low {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.priority-medium {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.priority-high {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.priority-urgent {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.manager-project-description {
+  min-height: 42px;
+  margin: 14px 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Project date information */
+.manager-project-dates {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 14px 0;
+  border-top: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.manager-project-dates div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.manager-project-dates span {
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.manager-project-dates strong {
+  color: #334155;
+  font-size: 13px;
+}
+
+.manager-project-department {
+  margin-top: 14px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+/* Empty and loading states */
+.manager-project-loading,
+.manager-project-empty {
+  padding: 40px 20px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  background: white;
+  text-align: center;
+  color: #64748b;
+}
+
+.manager-project-empty h3 {
+  margin: 0 0 8px;
+  color: #334155;
+}
+
+.manager-project-empty p {
+  margin: 0;
+  font-size: 13px;
+}
+
+/* Responsive layout */
+@media (max-width: 800px) {
+  .manager-project-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .manager-projects-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .manager-project-create-button {
+    width: 100%;
+  }
+
+  .manager-project-form-card {
+    padding: 18px;
+  }
+
+  .manager-project-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .manager-project-field.full-width {
+    grid-column: auto;
+  }
+
+  .manager-project-form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .manager-project-form-actions button {
+    width: 100%;
+  }
+}
+
+/* Project Group Chat Actions */
+.manager-project-chat-actions {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.manager-project-chat-button {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  background: #4f46e5;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.manager-project-chat-button:hover {
+  background: #4338ca;
+}
+
+.manager-project-chat-button.active {
+  background: #059669;
+}
+
+.manager-project-chat-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Project Chat Section */
+.manager-project-chat-section {
+  margin-top: 28px;
+  padding: 20px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+}
+
+/* Chat Heading */
+.manager-project-chat-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.manager-project-chat-heading h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #111827;
+}
+
+.manager-project-chat-heading p {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* Close Chat Button */
+.manager-project-close-chat {
+  padding: 10px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.manager-project-close-chat:hover {
+  background: #f3f4f6;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .manager-project-chat-section {
+    padding: 12px;
+  }
+
+  .manager-project-chat-heading {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

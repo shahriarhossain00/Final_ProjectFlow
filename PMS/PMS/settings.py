@@ -15,6 +15,7 @@ from dotenv import load_dotenv
 import dj_database_url
 from pathlib import Path
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(os.path.join(BASE_DIR, '.env'))  # Load environment variables from .env file
@@ -41,9 +42,15 @@ if render_host:
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    # "https://pms-frontend.vercel.app",
+    "https://management-system-practice.netlify.app"
 ]
 # Application definition
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+RESEND_API_KEY = os.getenv("RESEND_API_KEY")
+RESEND_FROM_EMAIL = os.getenv(
+    "RESEND_FROM_EMAIL",
+    "onboarding@resend.dev"
+)
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -57,8 +64,11 @@ INSTALLED_APPS = [
     'Project',
     'rest_framework_simplejwt.token_blacklist',
      'corsheaders',
-     
-   
+      # Cloudinary
+    'cloudinary_storage',
+    'cloudinary'
+
+
 ]
 
 MIDDLEWARE = [
@@ -105,9 +115,9 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": (
         "rest_framework.pagination.PageNumberPagination"
         ),
-    
+
     "PAGE_SIZE": 3,
-        
+
 
 
 }
@@ -160,9 +170,14 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+
 STORAGES = {
     "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "BACKEND": (
+            "cloudinary_storage.storage.MediaCloudinaryStorage"
+            if os.getenv("CLOUDINARY_URL")
+            else "django.core.files.storage.FileSystemStorage"
+        ),
     },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
@@ -181,8 +196,8 @@ SIMPLE_JWT = {
     "CHECK_REVOKE_TOKEN": True,
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
-    
-    
+
+
 }
 
 #Email Settings
@@ -190,8 +205,8 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER') 
-EMAIL_HOST_PASSWORD =os.getenv('EMAIL_HOST_PASSWORD') 
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD =os.getenv('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 MEDIA_URL = "/media/"

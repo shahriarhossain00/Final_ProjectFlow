@@ -1,24 +1,32 @@
+
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404, render
 from django.conf import settings
+from .serializers import GoogleLoginSerializer
 
 # Create your views here.
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
-
+from .services import send_otp_email
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
+from django.conf import settings
+from google.oauth2 import id_token as google_id_token
+from google.auth.transport import requests as google_requests
+from rest_framework_simplejwt.tokens import RefreshToken
+from .serializers import GoogleLoginSerializer
 
 from accounts.permissions import EMployeeList_Permission
 
 from .serializers import LogoutSerializer, ProfileSerializer
 from .models import OTP
 from django.contrib.auth import get_user_model
-user=get_user_model()
+
+user = get_user_model()
 
 from .serializers import (
     ChangePasswordSerializer,
@@ -27,23 +35,33 @@ from .serializers import (
     ForgotPasswordSerializer,
     ResetPasswordSerializer
 )
+
+
 class RegisterAPIView(generics.CreateAPIView):
     serializer_class = RegistrationSerializer
     permission_classes = [AllowAny]
+
+
 class ProfileAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
         return self.request.user
+
     def put(self, request, *args, **kwargs):
         return self.update(request, *args, **kwargs)
+
     def delete(self, request, *args, **kwargs):
         return self.destroy(request, *args, **kwargs)
+
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
+
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
+
 
 class ChangePasswordAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -70,7 +88,6 @@ class ChangePasswordAPIView(APIView):
         )
 
 
-
 class LogoutAPIView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = LogoutSerializer
@@ -83,7 +100,6 @@ class LogoutAPIView(APIView):
 
         try:
             token = RefreshToken(refresh_token)
-         
 
             if str(token["user_id"]) != str(request.user.pk):
                 return Response(
@@ -103,7 +119,10 @@ class LogoutAPIView(APIView):
             {"detail": "Logged out successfully."},
             status=status.HTTP_200_OK
         )
+
+
 from .services import generate_otp
+
 
 class ForgotPasswordAPIView(APIView):
     permission_classes = [AllowAny]
@@ -142,33 +161,35 @@ class ForgotPasswordAPIView(APIView):
 
             otp = generate_otp()
 
-            OTP.objects.create(
+            otp_instance = OTP.objects.create(
                 user=user,
                 code=otp,
             )
 
-            result = send_mail(
-                subject="Password Reset OTP",
-                message=f"Your OTP for password reset is: {otp}",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[user.email],
-                fail_silently=False,
+            # Send OTP using Resend
+            email_sent = send_otp_email(
+                email=user.email,
+                otp=otp
             )
 
-            if result == 0:
+            if not email_sent:
+                otp_instance.delete()
+
                 return Response(
-                    {"detail": "Unable to send OTP."},
+                    {"detail": "Unable to send OTP. Please try again."},
                     status=status.HTTP_503_SERVICE_UNAVAILABLE,
                 )
 
         return Response(
             message,
             status=status.HTTP_200_OK,
-        )                           
+        )
+
 
 class ResetPasswordView(APIView):
     permission_classes = [AllowAny]
     serializer_class = ResetPasswordSerializer
+
     def post(self, request):
         serializer = ResetPasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -206,9 +227,11 @@ class ResetPasswordView(APIView):
             status=status.HTTP_200_OK,
         )
 
+
 class ProfilePictureAPIView(APIView):
     serializer_class = ProfileSerializer
     permission_classes = [IsAuthenticated]
+
     def get(self, request, *args, **kwargs):
         profile = request.user.profile
         serializer = self.serializer_class(profile)
@@ -224,11 +247,84 @@ class ProfilePictureAPIView(APIView):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-#get a list of employees with role 'Employee'   
 
+# Get a list of employees with role 'Employee'
 class EmployeeListAPIView(generics.ListAPIView):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated, EMployeeList_Permission]
 
     def get_queryset(self):
         return user.objects.filter(profile__role='Employee')
+
+
+class GoogleLoginAPIView(APIView):
+    permission_classes = [AllowAny]
+    serializer_class = GoogleLoginSerializer
+
+    def post(self, request):
+        serializer = GoogleLoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        token = serializer.validated_data["id_token"]
+
+        if not settings.GOOGLE_CLIENT_ID:
+            return Response(
+                {"detail": "Google login is not configured."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        try:
+            info = google_id_token.verify_oauth2_token(
+                token,
+                google_requests.Request(),
+                settings.GOOGLE_CLIENT_ID,
+            )
+        except ValueError:
+            return Response(
+                {"detail": "Invalid Google token."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not info.get("email_verified"):
+            return Response(
+                {"detail": "Google email is not verified."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        email = info["email"].lower()
+        User = get_user_model()
+
+        user = User.objects.filter(email__iexact=email).first()
+
+        if user is None:
+            base = email.split("@")[0]
+            username = base
+            i = 1
+
+            while User.objects.filter(username=username).exists():
+                username = f"{base}{i}"
+                i += 1
+
+            user = User(
+                username=username,
+                email=email,
+                first_name=info.get("given_name", ""),
+                last_name=info.get("family_name", ""),
+            )
+            user.set_unusable_password()
+            user.save()  # Signal creates the Profile (role=Employee)
+
+        if not user.is_active:
+            return Response(
+                {"detail": "Account is disabled."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        refresh = RefreshToken.for_user(user)
+
+        return Response(
+            {
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+            },
+            status=status.HTTP_200_OK,
+        )
