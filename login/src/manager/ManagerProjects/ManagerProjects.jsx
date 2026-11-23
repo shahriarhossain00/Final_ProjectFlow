@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { getDepartments, getProjects, createProject } from "../api/managerApi";
 import ProjectChatbox from "../../components/ProjectChatbox/ProjectChatbox";
 import "./ManagerProjects.css";
+import ProjectHealth from "../../features/project-health/ProjectHealth";
 
 // Available project priority values supported by the backend.
 const PRIORITY_OPTIONS = ["Low", "Medium", "High", "Urgent"];
@@ -27,6 +28,7 @@ function ManagerProjects({ user }) {
 
   // Currently selected project for group chat.
   const [selectedProject, setSelectedProject] = useState(null);
+  const [selectedHealthProject, setSelectedHealthProject] = useState(null);
 
   // Project creation form state.
   const [formData, setFormData] = useState({
@@ -167,6 +169,18 @@ function ManagerProjects({ user }) {
   // Close the currently opened chat.
   function handleCloseChat() {
     setSelectedProject(null);
+  }
+  function handleOpenHealth(project) {
+    if (project?.id == null) return;
+
+    setSelectedHealthProject({
+      id: project.id,
+      name: project.name || `Project #${project.id}`,
+    });
+  }
+
+  function handleCloseHealth() {
+    setSelectedHealthProject(null);
   }
 
   return (
@@ -420,6 +434,14 @@ function ManagerProjects({ user }) {
                     >
                       {isChatSelected ? "Chat Open" : "Open Chat"}
                     </button>
+
+                    <button
+                      type="button"
+                      className="manager-project-chat-button"
+                      onClick={() => handleOpenHealth(project)}
+                    >
+                      View Health
+                    </button>
                   </div>
                 </article>
               );
@@ -446,7 +468,7 @@ function ManagerProjects({ user }) {
               Close Chat
             </button>
           </div>
-          {console.log("Manager current user:", user)}
+
           <ProjectChatbox
             key={selectedProject.id}
             projectId={selectedProject.id}
@@ -454,6 +476,14 @@ function ManagerProjects({ user }) {
             currentUserId={user?.id}
           />
         </section>
+      )}
+      {selectedHealthProject && (
+        <ProjectHealth
+          key={selectedHealthProject.id}
+          projectId={selectedHealthProject.id}
+          projectName={selectedHealthProject.name}
+          onClose={handleCloseHealth}
+        />
       )}
     </div>
   );

@@ -1,0 +1,243 @@
+.project-health-panel {
+  margin-top: 24px;
+  padding: 24px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+}
+
+.project-health-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.project-health-header h3 {
+  margin: 0 0 6px;
+  color: #0f172a;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.project-health-header p {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.project-health-close {
+  padding: 9px 16px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.project-health-close:hover {
+  background: #e2e8f0;
+}
+
+.project-health-loading {
+  padding: 20px 0;
+  color: #475569;
+  font-size: 14px;
+}
+
+.project-health-error {
+  padding: 14px 16px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+  font-size: 14px;
+}
+
+.project-health-content {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.project-health-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.project-health-score,
+.project-health-risk {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 20px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+}
+
+.project-health-score span,
+.project-health-risk span {
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.project-health-score strong {
+  color: #0f172a;
+  font-size: 30px;
+  font-weight: 700;
+}
+
+.project-health-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.project-health-badge.at-risk {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.project-health-badge.healthy {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.project-health-badge.unknown {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.project-health-progress {
+  width: 100%;
+  height: 12px;
+  overflow: hidden;
+  background: #e2e8f0;
+  border-radius: 999px;
+}
+
+.project-health-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  transition: width 0.3s ease;
+}
+
+.project-health-progress-fill.at-risk {
+  background: #f59e0b;
+}
+
+.project-health-progress-fill.healthy {
+  background: #22c55e;
+}
+
+.project-health-progress-fill.unknown {
+  background: #64748b;
+}
+
+.project-health-analysis {
+  padding: 20px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+}
+
+.project-health-analysis h4 {
+  margin: 0 0 16px;
+  color: #0f172a;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.project-health-analysis-text {
+  color: #334155;
+  font-size: 14px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .project-health-panel {
+    padding: 16px;
+  }
+
+  .project-health-header {
+    flex-direction: column;
+  }
+
+  .project-health-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .project-health-close {
+    align-self: flex-end;
+  }
+
+  .project-health-score strong {
+    font-size: 26px;
+  }
+}
+.project-health-analysis-text {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.8;
+}
+
+.project-health-analysis-text h1,
+.project-health-analysis-text h2,
+.project-health-analysis-text h3 {
+  margin: 24px 0 12px;
+  color: #0f172a;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.project-health-analysis-text h1:first-child,
+.project-health-analysis-text h2:first-child,
+.project-health-analysis-text h3:first-child {
+  margin-top: 0;
+}
+
+.project-health-analysis-text p {
+  margin: 0 0 12px;
+}
+
+.project-health-analysis-text strong {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.project-health-analysis-text ul,
+.project-health-analysis-text ol {
+  margin: 10px 0 20px;
+  padding-left: 24px;
+}
+
+.project-health-analysis-text li {
+  margin-bottom: 10px;
+  padding-left: 4px;
+}
+
+.project-health-analysis-text li::marker {
+  color: #2563eb;
+  font-weight: 700;
+}
+
+.project-health-analysis-text li p {
+  margin-bottom: 4px;
+}
+
+.project-health-analysis-text > :last-child {
+  margin-bottom: 0;
+}

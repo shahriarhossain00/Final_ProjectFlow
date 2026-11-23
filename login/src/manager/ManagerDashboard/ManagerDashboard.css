@@ -603,3 +603,16 @@
     margin-right: 0;
   }
 }
+.manager-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  min-width: 0;
+}
+
+@media (max-width: 600px) {
+  .manager-header-actions {
+    gap: 10px;
+  }
+}
