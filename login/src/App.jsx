@@ -8,6 +8,8 @@ import EmployeeDashboard from "./employee/EmployeeDashboard/EmployeeDashboard";
 import ForgotPassword from "./employee/ForgotPassword/ForgotPassword";
 import ResetPassword from "./employee/ResetPassword/ResetPassword";
 
+import AIChatbot from "./features/ai-chatbot/AIChatbot";
+
 // New Manager dashboard
 import ManagerDashboard from "./manager/ManagerDashboard/ManagerDashboard";
 
@@ -239,6 +241,10 @@ function App() {
             isLoggingOut={isLoggingOut}
             onPasswordChanged={handlePasswordChanged}
           />
+        )}
+      {currentUser &&
+        (page === "manager-dashboard" || page === "employee-dashboard") && (
+          <AIChatbot />
         )}
     </>
   );

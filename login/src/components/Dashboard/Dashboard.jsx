@@ -12,6 +12,8 @@ import TaskSubmissions from "../TaskSubmissions/TaskSubmissions";
 
 import { getProjects, toUiProject } from "../../services/projectApi";
 import { getTasks, getEmployees } from "../../services/taskApi";
+import ProjectHealth from "../../features/project-health/ProjectHealth";
+import { getProjectHealth } from "../../features/project-health/projectHealthApi";
 
 function getSavedArray(key) {
   try {
@@ -113,25 +115,26 @@ function Dashboard({ onLogout }) {
   const [activePage, setActivePage] = useState("dashboard");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Backend projects
   const [projects, setProjects] = useState([]);
   const [projectsLoading, setProjectsLoading] = useState(true);
   const [projectsError, setProjectsError] = useState("");
 
-  // Backend tasks and employees
   const [tasks, setTasks] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [dashboardLoading, setDashboardLoading] = useState(true);
   const [dashboardError, setDashboardError] = useState("");
 
-  // Existing local members and memberships
   const [members, setMembers] = useState(() => getSavedArray("allMembers"));
 
   const [memberships, setMemberships] = useState(() =>
     getSavedArray("projectMemberships"),
   );
 
-  // Fetch projects from Django
+  const [healthReports, setHealthReports] = useState({});
+  const [healthLoading, setHealthLoading] = useState({});
+  const [healthErrors, setHealthErrors] = useState({});
+  const [selectedHealthProject, setSelectedHealthProject] = useState(null);
+
   useEffect(() => {
     const controller = new AbortController();
 
@@ -160,7 +163,6 @@ function Dashboard({ onLogout }) {
     return () => controller.abort();
   }, []);
 
-  // Fetch tasks and employees when Dashboard opens
   useEffect(() => {
     if (activePage !== "dashboard") {
       return undefined;
@@ -197,22 +199,18 @@ function Dashboard({ onLogout }) {
     return () => controller.abort();
   }, [activePage]);
 
-  // LocalStorage: Existing members
   useEffect(() => {
     localStorage.setItem("allMembers", JSON.stringify(members));
   }, [members]);
 
-  // LocalStorage: Existing memberships
   useEffect(() => {
     localStorage.setItem("projectMemberships", JSON.stringify(memberships));
   }, [memberships]);
 
-  // Keep local task-dependent screens compatible
   useEffect(() => {
     localStorage.setItem("tasks", JSON.stringify(tasks));
   }, [tasks]);
 
-  // Close mobile sidebar with Escape
   useEffect(() => {
     if (!isSidebarOpen) return;
 
@@ -229,7 +227,6 @@ function Dashboard({ onLogout }) {
     };
   }, [isSidebarOpen]);
 
-  // Navigation
   const handleNavigate = (page) => {
     if (page === "dashboard" && activePage !== "dashboard") {
       setDashboardLoading(true);
@@ -239,7 +236,6 @@ function Dashboard({ onLogout }) {
     setIsSidebarOpen(false);
   };
 
-  // Project CRUD callbacks
   const handleAddProject = (newProject) => {
     setProjects((previous) => [...previous, newProject]);
   };
@@ -306,10 +302,19 @@ function Dashboard({ onLogout }) {
       return [...remaining, ...transferring];
     });
 
+    setHealthReports((previous) => {
+      const next = { ...previous };
+      delete next[String(projectId)];
+      return next;
+    });
+
+    setSelectedHealthProject((previous) =>
+      previous && String(previous.id) === String(projectId) ? null : previous,
+    );
+
     return true;
   };
 
-  // Existing local member functionality
   const handleAddMember = (newMember) => {
     setMembers((previous) => [...previous, newMember]);
   };
@@ -396,7 +401,6 @@ function Dashboard({ onLogout }) {
     return true;
   };
 
-  // Get task-assigned employees for a project
   const getProjectAssignees = (projectId) => {
     const projectTasks = tasks.filter(
       (task) => String(getProjectId(task)) === String(projectId),
@@ -422,9 +426,66 @@ function Dashboard({ onLogout }) {
     });
   };
 
-  // Completed task count
+  async function handleAnalyzeHealth(project) {
+    if (project?.id == null) return;
+
+    const projectId = String(project.id);
+
+    if (healthLoading[projectId]) return;
+
+    setHealthLoading((previous) => ({
+      ...previous,
+      [projectId]: true,
+    }));
+
+    setHealthErrors((previous) => ({
+      ...previous,
+      [projectId]: "",
+    }));
+
+    try {
+      const report = await getProjectHealth(project.id);
+
+      setHealthReports((previous) => ({
+        ...previous,
+        [projectId]: report,
+      }));
+    } catch (error) {
+      setHealthErrors((previous) => ({
+        ...previous,
+        [projectId]: error.message || "Unable to analyze project health.",
+      }));
+    } finally {
+      setHealthLoading((previous) => ({
+        ...previous,
+        [projectId]: false,
+      }));
+    }
+  }
+
+  function handleViewHealth(project) {
+    if (project?.id == null) return;
+
+    setSelectedHealthProject({
+      id: project.id,
+      name: project.projectName || project.name || `Project #${project.id}`,
+    });
+  }
+
   const totalCompletedTasks = tasks.filter((task) =>
     ["completed", "done"].includes(String(task.status || "").toLowerCase()),
+  ).length;
+
+  const analyzedReports = projects
+    .map((project) => healthReports[String(project.id)])
+    .filter(Boolean);
+
+  const healthyCount = analyzedReports.filter(
+    (report) => String(report.health.level).toLowerCase() === "healthy",
+  ).length;
+
+  const atRiskCount = analyzedReports.filter(
+    (report) => String(report.health.level).toLowerCase() === "at risk",
   ).length;
 
   const activeTitle =
@@ -432,7 +493,6 @@ function Dashboard({ onLogout }) {
 
   return (
     <div className="dashboard-container">
-      {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
         <button
           type="button"
@@ -442,7 +502,6 @@ function Dashboard({ onLogout }) {
         />
       )}
 
-      {/* Sidebar */}
       <aside
         id="admin-sidebar"
         className={`sidebar ${isSidebarOpen ? "sidebar-open" : ""}`}
@@ -504,7 +563,6 @@ function Dashboard({ onLogout }) {
         </div>
       </aside>
 
-      {/* Main Content */}
       <main>
         <header className="navbar">
           <div className="navbar-left">
@@ -534,10 +592,8 @@ function Dashboard({ onLogout }) {
         </header>
 
         <section className="dashboard-content">
-          {/* Search & Filter */}
           {activePage === "search-filter" && <SearchAndFilter />}
 
-          {/* Dashboard Overview */}
           {activePage === "dashboard" && (
             <div className="dashboard-overview">
               <div className="dashboard-heading">
@@ -563,7 +619,6 @@ function Dashboard({ onLogout }) {
 
               {!dashboardLoading && !dashboardError && (
                 <>
-                  {/* Statistics */}
                   <div className="overview-stats">
                     <div className="stat-card">
                       <span>Total Projects</span>
@@ -586,7 +641,39 @@ function Dashboard({ onLogout }) {
                     </div>
                   </div>
 
-                  {/* Project Summary Cards */}
+                  <section className="admin-health-overview">
+                    <div className="admin-health-heading">
+                      <div>
+                        <h2>Project Health Overview</h2>
+                        <p>
+                          AI-powered health analysis for individual projects
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="admin-health-stats">
+                      <div className="admin-health-stat">
+                        <span>Analyzed Projects</span>
+                        <strong>{analyzedReports.length}</strong>
+                      </div>
+
+                      <div className="admin-health-stat">
+                        <span>Healthy</span>
+                        <strong>{healthyCount}</strong>
+                      </div>
+
+                      <div className="admin-health-stat">
+                        <span>At Risk</span>
+                        <strong>{atRiskCount}</strong>
+                      </div>
+                    </div>
+
+                    <p className="admin-health-note">
+                      Health results are generated on demand. Projects without
+                      an analysis are not included in these counts.
+                    </p>
+                  </section>
+
                   <div className="summary-cards">
                     {projects.length === 0 ? (
                       <p>
@@ -605,6 +692,23 @@ function Dashboard({ onLogout }) {
                           project.id,
                         );
 
+                        const projectId = String(project.id);
+                        const healthReport = healthReports[projectId];
+                        const isHealthLoading = Boolean(
+                          healthLoading[projectId],
+                        );
+                        const healthError = healthErrors[projectId];
+
+                        const healthLevel = healthReport?.health?.level;
+                        const healthScore = healthReport?.health?.score;
+
+                        const healthClass =
+                          String(healthLevel).toLowerCase() === "healthy"
+                            ? "healthy"
+                            : String(healthLevel).toLowerCase() === "at risk"
+                              ? "at-risk"
+                              : "unknown";
+
                         return (
                           <div className="summary-card" key={project.id}>
                             <h3>{project.projectName}</h3>
@@ -613,7 +717,76 @@ function Dashboard({ onLogout }) {
                               {project.description || "No description added"}
                             </p>
 
-                            {/* Assigned Employees */}
+                            <div className="admin-project-health">
+                              <div className="admin-project-health-top">
+                                <strong>Project Health</strong>
+
+                                {healthReport ? (
+                                  <span
+                                    className={`admin-health-badge ${healthClass}`}
+                                  >
+                                    {healthLevel}
+                                  </span>
+                                ) : (
+                                  <span className="admin-health-badge unknown">
+                                    Not analyzed
+                                  </span>
+                                )}
+                              </div>
+
+                              {healthReport && (
+                                <>
+                                  <div className="admin-project-health-score">
+                                    <span>Health Score</span>
+                                    <strong>{healthScore}/100</strong>
+                                  </div>
+
+                                  <div className="admin-health-progress">
+                                    <div
+                                      className={`admin-health-progress-fill ${healthClass}`}
+                                      style={{
+                                        width: `${Math.min(
+                                          100,
+                                          Math.max(0, healthScore),
+                                        )}%`,
+                                      }}
+                                    />
+                                  </div>
+                                </>
+                              )}
+
+                              {healthError && (
+                                <p className="admin-health-error" role="alert">
+                                  {healthError}
+                                </p>
+                              )}
+
+                              <div className="admin-health-actions">
+                                <button
+                                  type="button"
+                                  className="admin-health-analyze-btn"
+                                  onClick={() => handleAnalyzeHealth(project)}
+                                  disabled={isHealthLoading}
+                                >
+                                  {isHealthLoading
+                                    ? "Analyzing..."
+                                    : healthReport
+                                      ? "Refresh Health"
+                                      : "Analyze Health"}
+                                </button>
+
+                                {healthReport && (
+                                  <button
+                                    type="button"
+                                    className="admin-health-view-btn"
+                                    onClick={() => handleViewHealth(project)}
+                                  >
+                                    View Full Analysis
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+
                             <div className="overview-section">
                               <h4>
                                 Assigned Employees ({projectAssignees.length})
@@ -634,7 +807,6 @@ function Dashboard({ onLogout }) {
                               )}
                             </div>
 
-                            {/* Project Tasks */}
                             <div className="overview-section">
                               <h4>Tasks ({projectTasks.length})</h4>
 
@@ -692,17 +864,44 @@ function Dashboard({ onLogout }) {
                       })
                     )}
                   </div>
+
+                  {selectedHealthProject && (
+                    <div
+                      className="admin-health-modal-overlay"
+                      role="presentation"
+                      onMouseDown={(event) => {
+                        if (event.target === event.currentTarget) {
+                          setSelectedHealthProject(null);
+                        }
+                      }}
+                    >
+                      <div
+                        className="admin-health-modal"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label={`${selectedHealthProject.name} Project Health Report`}
+                      >
+                        <ProjectHealth
+                          key={selectedHealthProject.id}
+                          projectId={selectedHealthProject.id}
+                          projectName={selectedHealthProject.name}
+                          initialReport={
+                            healthReports[String(selectedHealthProject.id)]
+                          }
+                          onClose={() => setSelectedHealthProject(null)}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
             </div>
           )}
 
-          {/* All Members */}
           {activePage === "all-members" && (
             <AllMembers members={members} onAddMember={handleAddMember} />
           )}
 
-          {/* Create Project */}
           {activePage === "create-project" && (
             <>
               {projectsLoading && (
@@ -726,7 +925,6 @@ function Dashboard({ onLogout }) {
             </>
           )}
 
-          {/* Project Members */}
           {activePage === "project-members" && (
             <ProjectMembers
               projects={projects}
@@ -738,7 +936,6 @@ function Dashboard({ onLogout }) {
             />
           )}
 
-          {/* Tasks */}
           {activePage === "tasks" && (
             <TaskList
               projects={projects}
@@ -749,7 +946,6 @@ function Dashboard({ onLogout }) {
             />
           )}
 
-          {/* Kanban Board */}
           {activePage === "kanban" && (
             <KanbanBoard
               projects={projects}
@@ -759,7 +955,6 @@ function Dashboard({ onLogout }) {
             />
           )}
 
-          {/* Task Details */}
           {activePage === "task-details" && (
             <TaskDetails
               projects={projects}
@@ -769,10 +964,8 @@ function Dashboard({ onLogout }) {
             />
           )}
 
-          {/* Task Submissions */}
           {activePage === "task-submissions" && <TaskSubmissions />}
 
-          {/* Settings */}
           {activePage === "settings" && (
             <div className="empty-page">
               <h2>Settings</h2>

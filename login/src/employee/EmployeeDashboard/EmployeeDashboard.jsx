@@ -10,6 +10,8 @@ import { getEmployeeTasks } from "../api/employeeTasksApi";
 
 import "./EmployeeDashboard.css";
 
+import NotificationBell from "../../features/notifications/NotificationBell";
+
 const API_BASE_URL = (
   import.meta.env.DEV
     ? import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000"
@@ -366,15 +368,21 @@ function EmployeeDashboard({
             </div>
           </div>
 
-          <div className="employee-navbar-user">
-            {renderAvatar("employee-top-avatar")}
+          <div className="employee-navbar-actions">
+            <NotificationBell />
 
-            <div className="employee-header-profile">
-              <strong className="employee-header-username">
-                {employeeName}
-              </strong>
+            <div className="employee-navbar-user">
+              {renderAvatar("employee-top-avatar")}
 
-              <span className="employee-header-id">Employee #{employeeId}</span>
+              <div className="employee-header-profile">
+                <strong className="employee-header-username">
+                  {employeeName}
+                </strong>
+
+                <span className="employee-header-id">
+                  Employee #{employeeId}
+                </span>
+              </div>
             </div>
           </div>
         </header>

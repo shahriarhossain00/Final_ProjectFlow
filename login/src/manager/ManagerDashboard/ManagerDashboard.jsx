@@ -4,7 +4,7 @@ import "./ManagerDashboard.css";
 import ManagerProjects from "../ManagerProjects/ManagerProjects";
 import { getProjects, getTasks } from "../api/managerApi";
 import SearchAndFilter from "../../components/SearchAndFilter/SearchAndFilter";
-
+import NotificationBell from "../../features/notifications/NotificationBell";
 // Manager's main workspace.
 function ManagerDashboard({ user, onLogout, isLoggingOut }) {
   const [activeSection, setActiveSection] = useState("overview");
@@ -161,7 +161,11 @@ function ManagerDashboard({ user, onLogout, isLoggingOut }) {
             <h1>{activeSection === "overview" ? "Dashboard" : activeTitle}</h1>
           </div>
 
-          <div className="manager-header-user">Welcome, {user?.username}</div>
+          <div className="manager-header-actions">
+            <NotificationBell />
+
+            <div className="manager-header-user">Welcome, {user?.username}</div>
+          </div>
         </header>
 
         {/* Overview section */}

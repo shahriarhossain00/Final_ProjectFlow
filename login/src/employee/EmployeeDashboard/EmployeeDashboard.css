@@ -493,3 +493,20 @@
     display: none;
   }
 }
+.employee-navbar-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  min-width: 0;
+}
+
+@media (max-width: 600px) {
+  .employee-navbar-actions {
+    gap: 10px;
+  }
+
+  .employee-navbar-actions .employee-header-profile {
+    display: none;
+  }
+}
