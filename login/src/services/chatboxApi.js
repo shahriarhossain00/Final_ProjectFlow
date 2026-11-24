@@ -89,3 +89,45 @@ export async function getChatUsers(signal) {
 
   return Array.isArray(data?.results) ? data.results : [];
 }
+
+// Generate an AI summary of a project's team chat.
+export async function getProjectChatSummary(projectId, signal) {
+  if (!Number.isSafeInteger(Number(projectId)) || Number(projectId) <= 0) {
+    throw new Error("Valid project ID is required.");
+  }
+
+  const token = localStorage.getItem("accessToken");
+
+  if (!token) {
+    throw new Error("Session expired. Please log in again.");
+  }
+
+  const response = await fetch(
+    `${API_BASE_URL}/project/chat-summary/${encodeURIComponent(projectId)}/`,
+    {
+      method: "GET",
+      signal,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+      },
+    },
+  );
+
+  if (!response.ok) {
+    const messages = {
+      401: "Session expired. Please log in again.",
+      403: "You do not have permission to summarize this chat.",
+      404: "Project or chat not found.",
+      429: "Too many requests. Please try again later.",
+      503: "AI summarization is temporarily unavailable.",
+    };
+
+    throw new Error(
+      messages[response.status] ||
+        "Unable to generate chat summary. Please try again.",
+    );
+  }
+
+  return await response.json();
+}

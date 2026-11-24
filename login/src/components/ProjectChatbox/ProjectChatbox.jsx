@@ -1,3 +1,4 @@
+import ChatSummaryModal from "../../features/chat-summary/ChatSummaryModal";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   getProjectChatbox,
@@ -17,7 +18,7 @@ export default function ProjectChatbox({
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [chatUsers, setChatUsers] = useState({});
-
+  const [isSummaryOpen, setIsSummaryOpen] = useState(false);
   const bottomRef = useRef(null);
   const sendingRef = useRef(false);
 
@@ -179,7 +180,19 @@ export default function ProjectChatbox({
           <p>{projectName}</p>
         </div>
 
-        <span className="project-chatbox__status">Group Chat</span>
+        <div className="project-chatbox__header-actions">
+          <button
+            type="button"
+            className="project-chatbox__summary-btn"
+            onClick={() => setIsSummaryOpen(true)}
+            disabled={loading || !chatbox || messages.length === 0}
+          >
+            <span aria-hidden="true">✦</span>
+            Summarize Chat
+          </button>
+
+          <span className="project-chatbox__status">Group Chat</span>
+        </div>
       </header>
 
       <div
@@ -248,7 +261,15 @@ export default function ProjectChatbox({
         <button type="submit" disabled={!chatbox || sending || !message.trim()}>
           {sending ? "Sending..." : "Send"}
         </button>
-      </form>
+            </form>
+
+      {isSummaryOpen && (
+        <ChatSummaryModal
+          key={projectId}
+          projectId={projectId}
+          onClose={() => setIsSummaryOpen(false)}
+        />
+      )}
     </section>
   );
 }
