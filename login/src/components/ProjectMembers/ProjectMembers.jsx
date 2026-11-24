@@ -2,56 +2,105 @@ import { useEffect, useMemo, useState } from "react";
 import "./ProjectMembers.css";
 import { getEmployees, getTasks } from "../../services/taskApi";
 
-function getEmployeeName(employee) {
-  if (!employee) return "Unknown Employee";
-
-  const fullName = [employee.first_name, employee.last_name]
-    .filter(Boolean)
-    .join(" ")
-    .trim();
-
-  return fullName || employee.username || `Employee #${employee.id}`;
-}
+const INITIAL_FILTERS = {
+  memberId: "",
+  projectId: "",
+};
 
 function getTaskProjectId(task) {
   return typeof task.project === "object" ? task.project?.id : task.project;
 }
 
-function getAssignedEmployeeId(task) {
+function getAssignedUserId(task) {
   return typeof task.assigned_to === "object"
     ? task.assigned_to?.id
     : task.assigned_to;
 }
 
-function ProjectMembers({
-  projects,
-  members,
-  memberships,
-  tasks,
-  onAddMembership,
-  onRemoveMembership,
-}) {
-  const [selectedMember, setSelectedMember] = useState("");
-  const [selectedProject, setSelectedProject] = useState("");
+function getProjectName(project) {
+  return project.projectName || project.name || `Project #${project.id}`;
+}
 
-  const [removingMember, setRemovingMember] = useState(null);
-  const [replacementMemberId, setReplacementMemberId] = useState("");
+function SearchIcon() {
+  return (
+    <svg
+      width="17"
+      height="17"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-4-4" />
+    </svg>
+  );
+}
 
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+function ResetIcon() {
+  return (
+    <svg
+      width="17"
+      height="17"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+      <path d="M3 3v5h5" />
+    </svg>
+  );
+}
+
+function RefreshIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M20 7v5h-5" />
+      <path d="M4 17v-5h5" />
+      <path d="M6 8a7 7 0 0 1 12-2l2 6" />
+      <path d="M4 12l2 6a7 7 0 0 0 12-2" />
+    </svg>
+  );
+}
+
+function ProjectMembers({ projects = [] }) {
+  const [filters, setFilters] = useState(INITIAL_FILTERS);
+  const [appliedFilters, setAppliedFilters] = useState(INITIAL_FILTERS);
 
   const [backendTasks, setBackendTasks] = useState([]);
-  const [employees, setEmployees] = useState([]);
-  const [loadingAssignments, setLoadingAssignments] = useState(true);
-  const [assignmentError, setAssignmentError] = useState("");
+  const [members, setMembers] = useState([]);
 
-  // Load real task assignments from Django
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Load real members and task assignments
   useEffect(() => {
     const controller = new AbortController();
 
-    async function loadAssignments() {
+    async function loadData() {
+      setLoading(true);
+      setError("");
+
       try {
-        const [taskData, employeeData] = await Promise.all([
+        const [taskData, memberData] = await Promise.all([
           getTasks(controller.signal),
           getEmployees(controller.signal),
         ]);
@@ -59,218 +108,218 @@ function ProjectMembers({
         if (controller.signal.aborted) return;
 
         setBackendTasks(taskData);
-        setEmployees(employeeData);
-        setAssignmentError("");
+        setMembers(memberData);
       } catch (err) {
         if (controller.signal.aborted) return;
 
-        console.error("Project assignment loading error:", err);
+        setBackendTasks([]);
+        setMembers([]);
 
-        setAssignmentError(err.message || "Failed to load task assignments.");
+        setError(err.message || "Failed to load project members.");
       } finally {
         if (!controller.signal.aborted) {
-          setLoadingAssignments(false);
+          setLoading(false);
         }
       }
     }
 
-    loadAssignments();
+    loadData();
 
     return () => controller.abort();
-  }, []);
+  }, [refreshKey]);
 
-  // Existing local members who are not assigned
-  const availableMembers = members.filter(
-    (member) =>
-      !memberships.some((item) => String(item.memberId) === String(member.id)),
-  );
+  // Build a unified list using backend user IDs
+  const allMembers = useMemo(() => {
+    const memberMap = new Map();
 
-  // Group real task assignees by project
-  const assignedEmployeesByProject = useMemo(() => {
+    for (const member of members) {
+      if (member.id == null) continue;
+
+      const id = String(member.id);
+
+      memberMap.set(id, {
+        id,
+        username: member.username || "",
+        role: member.role || member.profile?.role || "",
+      });
+    }
+
+    // Include task assignees missing from the employee list
+    for (const task of backendTasks) {
+      const assignedId = getAssignedUserId(task);
+
+      if (assignedId == null) continue;
+
+      const id = String(assignedId);
+
+      const assignedUser =
+        typeof task.assigned_to === "object" ? task.assigned_to : null;
+
+      const existing = memberMap.get(id);
+
+      memberMap.set(id, {
+        id,
+        username:
+          existing?.username ||
+          task.assigned_to_name ||
+          assignedUser?.username ||
+          "",
+        role:
+          existing?.role ||
+          assignedUser?.role ||
+          assignedUser?.profile?.role ||
+          "",
+      });
+    }
+
+    return Array.from(memberMap.values())
+      .map((member) => ({
+        ...member,
+        username: member.username || `User #${member.id}`,
+      }))
+      .sort((a, b) => a.username.localeCompare(b.username));
+  }, [members, backendTasks]);
+
+  const membersById = useMemo(() => {
+    return new Map(allMembers.map((member) => [member.id, member]));
+  }, [allMembers]);
+
+  // Group actual task assignees by project
+  const assignedMembersByProject = useMemo(() => {
     const projectMap = new Map();
 
     for (const task of backendTasks) {
       const projectId = getTaskProjectId(task);
-      const employeeId = getAssignedEmployeeId(task);
+      const assignedId = getAssignedUserId(task);
 
-      if (projectId == null || employeeId == null) {
+      if (projectId == null || assignedId == null) {
         continue;
       }
 
       const projectKey = String(projectId);
-      const employeeKey = String(employeeId);
+      const memberKey = String(assignedId);
 
       if (!projectMap.has(projectKey)) {
         projectMap.set(projectKey, new Map());
       }
 
-      const employeeMap = projectMap.get(projectKey);
+      const projectMembers = projectMap.get(projectKey);
 
-      if (!employeeMap.has(employeeKey)) {
-        const employee = employees.find(
-          (item) => String(item.id) === employeeKey,
-        );
+      if (!projectMembers.has(memberKey)) {
+        const member = membersById.get(memberKey);
 
-        employeeMap.set(employeeKey, {
-          id: employeeId,
-          name: employee
-            ? getEmployeeName(employee)
-            : `Employee #${employeeId}`,
+        projectMembers.set(memberKey, {
+          id: memberKey,
+          username:
+            member?.username || task.assigned_to_name || `User #${memberKey}`,
+          role: member?.role || "",
           taskCount: 0,
+          completedTasks: 0,
         });
       }
 
-      employeeMap.get(employeeKey).taskCount += 1;
+      const assignedMember = projectMembers.get(memberKey);
+
+      assignedMember.taskCount += 1;
+
+      if (String(task.status || "").toLowerCase() === "completed") {
+        assignedMember.completedTasks += 1;
+      }
     }
 
     return projectMap;
-  }, [backendTasks, employees]);
+  }, [backendTasks, membersById]);
 
-  // Existing local project membership addition
-  const handleAdd = (event) => {
+  // Apply filters only after clicking Search
+  const filteredProjects = useMemo(() => {
+    return projects.filter((project) => {
+      const projectId = String(project.id);
+
+      if (appliedFilters.projectId && projectId !== appliedFilters.projectId) {
+        return false;
+      }
+
+      if (appliedFilters.memberId) {
+        return Boolean(
+          assignedMembersByProject.get(projectId)?.has(appliedFilters.memberId),
+        );
+      }
+
+      return true;
+    });
+  }, [projects, appliedFilters, assignedMembersByProject]);
+
+  const handleSearch = (event) => {
     event.preventDefault();
 
-    setMessage("");
-    setError("");
-
-    if (!selectedMember || !selectedProject) {
-      setError("Please select a member and a project.");
-      return;
-    }
-
-    const member = members.find(
-      (item) => String(item.id) === String(selectedMember),
-    );
-
-    const project = projects.find(
-      (item) => String(item.id) === String(selectedProject),
-    );
-
-    if (!member || !project) {
-      setError("Selected member or project was not found.");
-      return;
-    }
-
-    const success = onAddMembership(member.id, project.id);
-
-    if (!success) {
-      setError("Unable to assign this member.");
-      return;
-    }
-
-    setMessage(`${member.name} added to ${project.projectName} locally.`);
-
-    setSelectedMember("");
-    setSelectedProject("");
+    setAppliedFilters({ ...filters });
   };
 
-  // Open remove-member modal
-  const handleOpenRemove = (member, project) => {
-    setRemovingMember({
-      memberId: member.id,
-      memberName: member.name,
-      projectId: project.id,
-      projectName: project.projectName,
-    });
-
-    setReplacementMemberId("");
-    setMessage("");
-    setError("");
+  const handleResetFilters = () => {
+    setFilters({ ...INITIAL_FILTERS });
+    setAppliedFilters({ ...INITIAL_FILTERS });
   };
 
-  // Close remove-member modal
-  const handleCloseRemove = () => {
-    setRemovingMember(null);
-    setReplacementMemberId("");
-    setError("");
+  const handleRefresh = () => {
+    setRefreshKey((previous) => previous + 1);
   };
 
-  // Existing local remove/replace functionality
-  const handleConfirmRemove = () => {
-    if (!removingMember) return;
-
-    setError("");
-
-    const replacement = members.find(
-      (member) => String(member.id) === String(replacementMemberId),
-    );
-
-    const success = onRemoveMembership(
-      removingMember.memberId,
-      removingMember.projectId,
-      replacement?.id ?? "",
-    );
-
-    if (!success) {
-      setError("Unable to remove or replace this member.");
-      return;
-    }
-
-    if (replacement) {
-      setMessage(
-        `${removingMember.memberName} was replaced by ${replacement.name} locally.`,
-      );
-    } else {
-      setMessage(`${removingMember.memberName} removed from local membership.`);
-    }
-
-    handleCloseRemove();
-  };
-
-  // Close modal with Escape
-  useEffect(() => {
-    if (!removingMember) return;
-
-    const handleEscape = (event) => {
-      if (event.key === "Escape") {
-        handleCloseRemove();
-      }
-    };
-
-    document.addEventListener("keydown", handleEscape);
-
-    return () => {
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, [removingMember]);
-
-  const assignedTaskCount = removingMember
-    ? tasks.filter(
-        (task) =>
-          String(task.projectId) === String(removingMember.projectId) &&
-          String(task.assignedMemberId) === String(removingMember.memberId),
-      ).length
-    : 0;
+  const hasFilters = Boolean(
+    filters.memberId ||
+    filters.projectId ||
+    appliedFilters.memberId ||
+    appliedFilters.projectId,
+  );
 
   return (
     <div className="project-members-page">
       <h2>Project Members</h2>
 
       <p className="page-subtitle">
-        View task assignees and manage local project members.
+        View real project task assignees from the backend.
       </p>
 
-      {/* Existing Add Project Member Form */}
-      <form className="project-member-form" onSubmit={handleAdd}>
-        <h3>Add Project Member</h3>
+      {/* Project member search */}
+      <form className="project-member-form" onSubmit={handleSearch}>
+        <div className="pm-filter-header">
+          <h3>Filter Project Members</h3>
+
+          <button
+            type="button"
+            className={`pm-refresh-btn ${loading ? "pm-refreshing" : ""}`}
+            onClick={handleRefresh}
+            disabled={loading}
+            title="Refresh member and task data"
+            aria-label="Refresh member and task data"
+          >
+            <RefreshIcon />
+          </button>
+        </div>
 
         <p className="form-hint">
-          Manual membership is currently stored locally. Task assignments below
-          are loaded from Django.
+          Search members and their assigned projects. To assign a new task, use
+          Tasks → Add Task.
         </p>
 
         <label htmlFor="select-member">Select Member</label>
 
         <select
           id="select-member"
-          value={selectedMember}
-          onChange={(event) => setSelectedMember(event.target.value)}
+          value={filters.memberId}
+          disabled={loading || Boolean(error)}
+          onChange={(event) =>
+            setFilters((previous) => ({
+              ...previous,
+              memberId: event.target.value,
+            }))
+          }
         >
-          <option value="">Select a member</option>
+          <option value="">All Members</option>
 
-          {availableMembers.map((member) => (
+          {allMembers.map((member) => (
             <option key={member.id} value={member.id}>
-              {member.name} - {member.role}
+              {member.username}
+              {member.role ? ` - ${member.role}` : ""}
             </option>
           ))}
         </select>
@@ -279,260 +328,151 @@ function ProjectMembers({
 
         <select
           id="select-project"
-          value={selectedProject}
-          onChange={(event) => setSelectedProject(event.target.value)}
+          value={filters.projectId}
+          disabled={loading || Boolean(error)}
+          onChange={(event) =>
+            setFilters((previous) => ({
+              ...previous,
+              projectId: event.target.value,
+            }))
+          }
         >
-          <option value="">Select a project</option>
+          <option value="">All Projects</option>
 
           {projects.map((project) => (
-            <option key={project.id} value={project.id}>
-              {project.projectName}
+            <option key={project.id} value={String(project.id)}>
+              {getProjectName(project)}
             </option>
           ))}
         </select>
 
-        <button
-          type="submit"
-          disabled={availableMembers.length === 0 || projects.length === 0}
-        >
-          + Add to Project
-        </button>
+        <div className="pm-filter-actions">
+          <button
+            type="submit"
+            className="pm-search-btn"
+            disabled={loading || Boolean(error)}
+          >
+            <SearchIcon />
+            Search
+          </button>
 
-        {members.length === 0 && (
-          <p className="form-hint">Add local members from All Members first.</p>
-        )}
-
-        {members.length > 0 && availableMembers.length === 0 && (
-          <p className="form-hint">All local members are currently assigned.</p>
-        )}
-
-        {projects.length === 0 && (
-          <p className="form-hint">Create a project first.</p>
-        )}
+          <button
+            type="button"
+            className="pm-reset-btn"
+            onClick={handleResetFilters}
+            disabled={loading || !hasFilters}
+          >
+            <ResetIcon />
+            Reset
+          </button>
+        </div>
       </form>
 
-      {/* Messages */}
-      {message && (
-        <p className="form-success project-member-message" role="status">
-          {message}
-        </p>
+      {/* Loading state */}
+      {loading && (
+        <div className="pm-loading-state" role="status">
+          <span className="pm-spinner" />
+          Loading project members...
+        </div>
       )}
 
-      {error && !removingMember && (
-        <p className="form-error project-member-message" role="alert">
-          {error}
-        </p>
+      {/* Error state */}
+      {error && (
+        <div className="pm-error-state" role="alert">
+          <p>{error}</p>
+
+          <button
+            type="button"
+            className="pm-retry-btn"
+            onClick={handleRefresh}
+          >
+            Try Again
+          </button>
+        </div>
       )}
 
-      {loadingAssignments && <p role="status">Loading assigned employees...</p>}
+      {!loading && !error && (
+        <>
+          <p className="pm-result-count" role="status">
+            Showing <strong>{filteredProjects.length}</strong> of{" "}
+            <strong>{projects.length}</strong> projects
+          </p>
 
-      {assignmentError && (
-        <p className="form-error" role="alert">
-          {assignmentError}
-        </p>
-      )}
+          {filteredProjects.length === 0 && (
+            <div className="pm-empty-state">
+              <p>No matching projects found.</p>
 
-      {/* Project Cards */}
-      <div className="project-members-list">
-        {projects.map((project) => {
-          const projectMembers = memberships
-            .filter((item) => String(item.projectId) === String(project.id))
-            .map((item) =>
-              members.find(
-                (member) => String(member.id) === String(item.memberId),
-              ),
-            )
-            .filter(Boolean);
+              <small>Try changing the selected member or project.</small>
+            </div>
+          )}
 
-          const assignedEmployees = Array.from(
-            assignedEmployeesByProject.get(String(project.id))?.values() ?? [],
-          );
+          {/* Project cards */}
+          <div className="project-members-list">
+            {filteredProjects.map((project) => {
+              const projectId = String(project.id);
 
-          return (
-            <div className="project-members-card" key={project.id}>
-              <div className="pm-card-header">
-                <h3>{project.projectName}</h3>
+              const assignedMembers = Array.from(
+                assignedMembersByProject.get(projectId)?.values() ?? [],
+              );
 
-                <span>
-                  {loadingAssignments
-                    ? "Loading..."
-                    : `${assignedEmployees.length} Assignees`}
-                </span>
-              </div>
+              const visibleMembers = appliedFilters.memberId
+                ? assignedMembers.filter(
+                    (member) => member.id === appliedFilters.memberId,
+                  )
+                : assignedMembers;
 
-              {/* Real Django Task Assignees */}
-              <div
-                style={{
-                  marginBottom: "18px",
-                  paddingBottom: "14px",
-                  borderBottom: "1px solid #e2e8f0",
-                }}
-              >
-                <h4 style={{ marginBottom: "12px" }}>Assigned Employees</h4>
+              return (
+                <div className="project-members-card" key={project.id}>
+                  <div className="pm-card-header">
+                    <h3>{getProjectName(project)}</h3>
 
-                {!loadingAssignments &&
-                  !assignmentError &&
-                  assignedEmployees.length === 0 && (
+                    <span>
+                      {visibleMembers.length}{" "}
+                      {visibleMembers.length === 1 ? "Assignee" : "Assignees"}
+                    </span>
+                  </div>
+
+                  <h4 className="pm-section-title">Assigned Members</h4>
+
+                  {visibleMembers.length === 0 ? (
                     <div className="pm-empty-state">
                       <p>No task assignees found.</p>
+
+                      <small>Assign a task from the Tasks section.</small>
                     </div>
-                  )}
+                  ) : (
+                    visibleMembers.map((member) => (
+                      <div className="pm-member-row" key={member.id}>
+                        <div className="pm-member-avatar">
+                          {member.username.charAt(0).toUpperCase()}
+                        </div>
 
-                {assignedEmployees.map((employee) => (
-                  <div className="pm-member-row" key={employee.id}>
-                    <div className="pm-member-info">
-                      <strong>{employee.name}</strong>
+                        <div className="pm-member-info">
+                          <strong>{member.username}</strong>
 
-                      <small>Django User ID: {employee.id}</small>
+                          {member.role && <small>{member.role}</small>}
 
-                      <span className="pm-task-count">
-                        {employee.taskCount} Assigned Tasks
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                          <small>User ID: {member.id}</small>
 
-              {/* Existing Local Members */}
-              <h4 style={{ marginBottom: "12px" }}>
-                Manual Project Members ({projectMembers.length})
-              </h4>
+                          <div className="pm-member-stats">
+                            <span className="pm-task-count">
+                              {member.taskCount} Assigned{" "}
+                              {member.taskCount === 1 ? "Task" : "Tasks"}
+                            </span>
 
-              {projectMembers.length === 0 ? (
-                <div className="pm-empty-state">
-                  <p>No manual members assigned yet.</p>
-
-                  <small>
-                    Manual members are managed separately from Django task
-                    assignments.
-                  </small>
-                </div>
-              ) : (
-                projectMembers.map((member) => {
-                  const memberTaskCount = tasks.filter(
-                    (task) =>
-                      String(task.projectId) === String(project.id) &&
-                      String(task.assignedMemberId) === String(member.id),
-                  ).length;
-
-                  return (
-                    <div className="pm-member-row" key={member.id}>
-                      <div className="pm-member-info">
-                        <strong>{member.name}</strong>
-                        <small>{member.role}</small>
-
-                        <span className="pm-task-count">
-                          {memberTaskCount} Local Tasks
-                        </span>
+                            <span className="pm-completed-count">
+                              {member.completedTasks} Completed
+                            </span>
+                          </div>
+                        </div>
                       </div>
-
-                      <button
-                        type="button"
-                        className="pm-remove-btn"
-                        onClick={() => handleOpenRemove(member, project)}
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Existing Remove / Replace Modal */}
-      {removingMember && (
-        <div
-          className="pm-modal-overlay"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) {
-              handleCloseRemove();
-            }
-          }}
-        >
-          <div
-            className="pm-remove-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="pm-remove-title"
-          >
-            <div className="pm-modal-header">
-              <div>
-                <h3 id="pm-remove-title">Remove Project Member</h3>
-
-                <p>Confirm local member removal or replacement.</p>
-              </div>
-
-              <button
-                type="button"
-                className="pm-modal-close"
-                aria-label="Close modal"
-                onClick={handleCloseRemove}
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="pm-modal-body">
-              <p>
-                Are you sure you want to remove{" "}
-                <strong>{removingMember.memberName}</strong> from{" "}
-                <strong>{removingMember.projectName}</strong>?
-              </p>
-
-              <div className="pm-warning-box">
-                <strong>Local Assigned Tasks: {assignedTaskCount}</strong>
-
-                <p>
-                  This action updates local membership only. Django task
-                  assignments will not change.
-                </p>
-              </div>
-
-              <label htmlFor="replacement-member">Replacement Member</label>
-
-              <select
-                id="replacement-member"
-                value={replacementMemberId}
-                onChange={(event) => setReplacementMemberId(event.target.value)}
-              >
-                <option value="">No One - Keep Local Tasks Unassigned</option>
-
-                {availableMembers.map((member) => (
-                  <option key={member.id} value={member.id}>
-                    {member.name} - {member.role}
-                  </option>
-                ))}
-              </select>
-
-              {error && (
-                <p className="form-error" role="alert">
-                  {error}
-                </p>
-              )}
-            </div>
-
-            <div className="pm-modal-footer">
-              <button
-                type="button"
-                className="pm-cancel-btn"
-                onClick={handleCloseRemove}
-              >
-                Cancel
-              </button>
-
-              <button
-                type="button"
-                className="pm-confirm-btn"
-                onClick={handleConfirmRemove}
-              >
-                Confirm Remove
-              </button>
-            </div>
+                    ))
+                  )}
+                </div>
+              );
+            })}
           </div>
-        </div>
+        </>
       )}
     </div>
   );

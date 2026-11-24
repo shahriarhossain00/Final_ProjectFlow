@@ -1,72 +1,176 @@
-import { useEffect, useState } from "react";
-import { getDepartments, getProjects, createProject } from "../api/managerApi";
+import { useEffect, useRef, useState } from "react";
+
+import {
+  getDepartments,
+  getMyManagedProjects,
+  createProject,
+} from "../api/managerApi";
+
 import ProjectChatbox from "../../components/ProjectChatbox/ProjectChatbox";
-import "./ManagerProjects.css";
 import ProjectHealth from "../../features/project-health/ProjectHealth";
 
-// Available project priority values supported by the backend.
+import "./ManagerProjects.css";
+
+// Supported project priorities.
 const PRIORITY_OPTIONS = ["Low", "Medium", "High", "Urgent"];
 
-// Format a date for display.
-function formatDate(dateValue) {
-  if (!dateValue) return "Not set";
+// Initial project form state.
+const INITIAL_FORM = {
+  name: "",
+  description: "",
+  department: "",
+  priority: "Medium",
+  start_date: "",
+  finish_date: "",
+};
 
-  return new Date(`${dateValue}T00:00:00`).toLocaleDateString();
+// Format project dates for display.
+function formatDate(dateValue) {
+  if (!dateValue) {
+    return "Not set";
+  }
+
+  const value = String(dateValue);
+
+  const date = new Date(
+    /^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T00:00:00` : value,
+  );
+
+  if (Number.isNaN(date.getTime())) {
+    return "Not set";
+  }
+
+  return date.toLocaleDateString();
 }
 
-// Manager's project management page.
+// Manager project management page.
 function ManagerProjects({ user }) {
+  // API data state.
   const [projects, setProjects] = useState([]);
   const [departments, setDepartments] = useState([]);
 
+  // Loading and submission state.
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
+  // Error and success state.
+  const [loadError, setLoadError] = useState("");
+  const [departmentError, setDepartmentError] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Currently selected project for group chat.
+  // Selected project features.
   const [selectedProject, setSelectedProject] = useState(null);
+
   const [selectedHealthProject, setSelectedHealthProject] = useState(null);
 
   // Project creation form state.
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    department: "",
-    priority: "Medium",
-    start_date: "",
-    finish_date: "",
-  });
+  const [formData, setFormData] = useState({ ...INITIAL_FORM });
 
-  // Load projects and departments when the page opens.
+  // Prevent duplicate project submissions.
+  const submittingRef = useRef(false);
+
+  // Fetch managed projects and departments.
   useEffect(() => {
-    loadPageData();
-  }, []);
+    const controller = new AbortController();
 
-  // Fetch required data from the existing backend APIs.
-  async function loadPageData() {
-    setLoading(true);
-    setError("");
+    async function loadPageData() {
+      setLoading(true);
+      setLoadError("");
+      setDepartmentError("");
 
-    try {
-      const [projectData, departmentData] = await Promise.all([
-        getProjects(),
-        getDepartments(),
-      ]);
+      try {
+        const [projectResult, departmentResult] = await Promise.allSettled([
+          getMyManagedProjects(controller.signal),
+          getDepartments(controller.signal),
+        ]);
 
-      setProjects(projectData);
-      setDepartments(departmentData);
-    } catch (err) {
-      console.error("Failed to load manager projects:", err);
-      setError(err.message || "Unable to load project data.");
-    } finally {
-      setLoading(false);
+        if (controller.signal.aborted) {
+          return;
+        }
+
+        // Handle managed project response.
+        if (projectResult.status === "fulfilled") {
+          const managedProjects = projectResult.value;
+
+          setProjects(managedProjects);
+
+          // Close chat if its project is no longer accessible.
+          setSelectedProject((current) => {
+            if (!current) {
+              return null;
+            }
+
+            return managedProjects.some(
+              (project) => String(project.id) === String(current.id),
+            )
+              ? current
+              : null;
+          });
+
+          // Close health view if its project is unavailable.
+          setSelectedHealthProject((current) => {
+            if (!current) {
+              return null;
+            }
+
+            return managedProjects.some(
+              (project) => String(project.id) === String(current.id),
+            )
+              ? current
+              : null;
+          });
+        } else {
+          setProjects([]);
+          setSelectedProject(null);
+          setSelectedHealthProject(null);
+
+          setLoadError(
+            projectResult.reason?.message || "Unable to load managed projects.",
+          );
+        }
+
+        // Handle department response independently.
+        if (departmentResult.status === "fulfilled") {
+          setDepartments(departmentResult.value);
+        } else {
+          setDepartments([]);
+
+          setDepartmentError(
+            departmentResult.reason?.message || "Unable to load departments.",
+          );
+        }
+      } catch (err) {
+        if (controller.signal.aborted) {
+          return;
+        }
+
+        setProjects([]);
+        setDepartments([]);
+        setSelectedProject(null);
+        setSelectedHealthProject(null);
+
+        setLoadError(err.message || "Unable to load project data.");
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      }
     }
+
+    loadPageData();
+
+    return () => controller.abort();
+  }, [user?.id, refreshKey]);
+
+  // Refresh page data.
+  function handleRefresh() {
+    setRefreshKey((previous) => previous + 1);
   }
 
-  // Update one form field.
+  // Update a form field.
   function handleChange(event) {
     const { name, value } = event.target;
 
@@ -74,31 +178,57 @@ function ManagerProjects({ user }) {
       ...previous,
       [name]: value,
     }));
+
+    setError("");
+    setSuccess("");
   }
 
-  // Reset the form when the user closes it.
+  // Reset and close the creation form.
   function resetForm() {
-    setFormData({
-      name: "",
-      description: "",
-      department: "",
-      priority: "Medium",
-      start_date: "",
-      finish_date: "",
-    });
-
+    setFormData({ ...INITIAL_FORM });
     setShowForm(false);
     setError("");
   }
 
-  // Validate the project form before submitting it.
+  // Open or close the project creation form.
+  function handleToggleForm() {
+    if (saving) {
+      return;
+    }
+
+    setError("");
+    setSuccess("");
+
+    if (showForm) {
+      resetForm();
+    } else {
+      setShowForm(true);
+    }
+  }
+
+  // Validate project creation data.
   function validateForm() {
-    if (!formData.name.trim()) {
+    const projectName = formData.name.trim();
+    const departmentId = Number(formData.department);
+
+    if (!projectName) {
       return "Project name is required.";
     }
 
-    if (!formData.department) {
-      return "Please select a department.";
+    if (projectName.length > 200) {
+      return "Project name cannot exceed 200 characters.";
+    }
+
+    if (
+      !Number.isSafeInteger(departmentId) ||
+      departmentId <= 0 ||
+      !departments.some((department) => Number(department.id) === departmentId)
+    ) {
+      return "Please select a valid department.";
+    }
+
+    if (!PRIORITY_OPTIONS.includes(formData.priority)) {
+      return "Please select a valid priority.";
     }
 
     if (!formData.start_date || !formData.finish_date) {
@@ -112,9 +242,13 @@ function ManagerProjects({ user }) {
     return "";
   }
 
-  // Create the project through the existing backend API.
+  // Create a project using the existing backend API.
   async function handleSubmit(event) {
     event.preventDefault();
+
+    if (submittingRef.current || loading || departmentError) {
+      return;
+    }
 
     setError("");
     setSuccess("");
@@ -126,10 +260,10 @@ function ManagerProjects({ user }) {
       return;
     }
 
+    submittingRef.current = true;
     setSaving(true);
 
     try {
-      // Prepare the payload expected by the existing Project API.
       const payload = {
         name: formData.name.trim(),
         description: formData.description.trim(),
@@ -139,26 +273,33 @@ function ManagerProjects({ user }) {
         finish_date: formData.finish_date,
       };
 
-      // Backend identifies the Manager from the JWT token.
+      // Backend identifies the manager using the JWT.
       await createProject(payload);
-
-      setSuccess("Project created successfully.");
 
       resetForm();
 
-      // Refresh project list after creation.
-      await loadPageData();
+      setSuccess("Project created successfully.");
+
+      // Refresh managed projects after creation.
+      handleRefresh();
     } catch (err) {
       console.error("Project creation failed:", err);
+
       setError(err.message || "Unable to create project.");
     } finally {
+      submittingRef.current = false;
       setSaving(false);
     }
   }
 
-  // Open a specific project's group chat.
+  // Open a managed project's group chat.
   function handleOpenChat(project) {
-    if (project?.id == null) return;
+    if (
+      project?.id == null ||
+      !projects.some((item) => String(item.id) === String(project.id))
+    ) {
+      return;
+    }
 
     setSelectedProject({
       id: project.id,
@@ -166,12 +307,19 @@ function ManagerProjects({ user }) {
     });
   }
 
-  // Close the currently opened chat.
+  // Close the selected project chat.
   function handleCloseChat() {
     setSelectedProject(null);
   }
+
+  // Open project health analysis.
   function handleOpenHealth(project) {
-    if (project?.id == null) return;
+    if (
+      project?.id == null ||
+      !projects.some((item) => String(item.id) === String(project.id))
+    ) {
+      return;
+    }
 
     setSelectedHealthProject({
       id: project.id,
@@ -179,6 +327,7 @@ function ManagerProjects({ user }) {
     });
   }
 
+  // Close project health analysis.
   function handleCloseHealth() {
     setSelectedHealthProject(null);
   }
@@ -198,23 +347,37 @@ function ManagerProjects({ user }) {
         <button
           type="button"
           className="manager-project-create-button"
-          onClick={() => {
-            setError("");
-            setSuccess("");
-            setShowForm((previous) => !previous);
-          }}
+          onClick={handleToggleForm}
+          disabled={saving}
         >
           {showForm ? "Close Form" : "+ Create Project"}
         </button>
       </div>
 
-      {/* API success and error messages */}
+      {/* Project loading error */}
+      {loadError && (
+        <div className="manager-project-message error" role="alert">
+          <p>{loadError}</p>
+
+          <button
+            type="button"
+            className="manager-project-cancel-button"
+            onClick={handleRefresh}
+            disabled={loading || saving}
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* Form submission error */}
       {error && (
         <div className="manager-project-message error" role="alert">
           {error}
         </div>
       )}
 
+      {/* Success message */}
       {success && (
         <div className="manager-project-message success" role="status">
           {success}
@@ -227,9 +390,25 @@ function ManagerProjects({ user }) {
           <div className="manager-project-form-heading">
             <div>
               <h3>Create New Project</h3>
+
               <p>Enter the project details below.</p>
             </div>
           </div>
+
+          {departmentError && (
+            <div className="manager-project-message error" role="alert">
+              <p>{departmentError}</p>
+
+              <button
+                type="button"
+                className="manager-project-cancel-button"
+                onClick={handleRefresh}
+                disabled={loading || saving}
+              >
+                Retry
+              </button>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit}>
             <div className="manager-project-form-grid">
@@ -245,6 +424,7 @@ function ManagerProjects({ user }) {
                   value={formData.name}
                   onChange={handleChange}
                   maxLength={200}
+                  disabled={saving}
                   required
                 />
               </div>
@@ -260,6 +440,7 @@ function ManagerProjects({ user }) {
                   value={formData.description}
                   onChange={handleChange}
                   rows={4}
+                  disabled={saving}
                 />
               </div>
 
@@ -272,16 +453,30 @@ function ManagerProjects({ user }) {
                   name="department"
                   value={formData.department}
                   onChange={handleChange}
+                  disabled={
+                    loading ||
+                    saving ||
+                    Boolean(departmentError) ||
+                    departments.length === 0
+                  }
                   required
                 >
-                  <option value="">Select department</option>
+                  <option value="">
+                    {loading ? "Loading departments..." : "Select department"}
+                  </option>
 
                   {departments.map((department) => (
                     <option key={department.id} value={department.id}>
-                      {department.name || department.department_name}
+                      {department.name ||
+                        department.department_name ||
+                        `Department #${department.id}`}
                     </option>
                   ))}
                 </select>
+
+                {!loading && !departmentError && departments.length === 0 && (
+                  <p>No departments available.</p>
+                )}
               </div>
 
               {/* Project priority */}
@@ -293,6 +488,7 @@ function ManagerProjects({ user }) {
                   name="priority"
                   value={formData.priority}
                   onChange={handleChange}
+                  disabled={saving}
                   required
                 >
                   {PRIORITY_OPTIONS.map((priority) => (
@@ -313,6 +509,7 @@ function ManagerProjects({ user }) {
                   type="date"
                   value={formData.start_date}
                   onChange={handleChange}
+                  disabled={saving}
                   required
                 />
               </div>
@@ -328,6 +525,7 @@ function ManagerProjects({ user }) {
                   min={formData.start_date || undefined}
                   value={formData.finish_date}
                   onChange={handleChange}
+                  disabled={saving}
                   required
                 />
               </div>
@@ -347,7 +545,12 @@ function ManagerProjects({ user }) {
               <button
                 type="submit"
                 className="manager-project-submit-button"
-                disabled={saving}
+                disabled={
+                  saving ||
+                  loading ||
+                  Boolean(departmentError) ||
+                  departments.length === 0
+                }
               >
                 {saving ? "Creating..." : "Create Project"}
               </button>
@@ -356,19 +559,42 @@ function ManagerProjects({ user }) {
         </section>
       )}
 
-      {/* Existing projects list */}
+      {/* Managed projects list */}
       <section className="manager-project-list-section">
         <div className="manager-project-list-heading">
           <h3>Project List</h3>
 
-          <span>{projects.length} projects</span>
+          <span>
+            {loading
+              ? "Loading..."
+              : loadError
+                ? "Unavailable"
+                : `${projects.length} projects`}
+          </span>
+
+          <button
+            type="button"
+            className="manager-project-cancel-button"
+            onClick={handleRefresh}
+            disabled={loading || saving}
+          >
+            Refresh
+          </button>
         </div>
 
         {loading ? (
-          <div className="manager-project-loading">Loading projects...</div>
+          <div className="manager-project-loading" role="status">
+            Loading projects...
+          </div>
+        ) : loadError ? (
+          <div className="manager-project-empty">
+            <h3>Unable to load projects</h3>
+
+            <p>Please retry to load your managed projects.</p>
+          </div>
         ) : projects.length === 0 ? (
           <div className="manager-project-empty">
-            <h3>No projects found</h3>
+            <h3>No managed projects found</h3>
 
             <p>Create your first project to get started.</p>
           </div>
@@ -379,18 +605,22 @@ function ManagerProjects({ user }) {
                 selectedProject != null &&
                 String(selectedProject.id) === String(project.id);
 
+              const priority = PRIORITY_OPTIONS.includes(project.priority)
+                ? project.priority
+                : "Medium";
+
               return (
                 <article className="manager-project-card" key={project.id}>
                   {/* Project name and priority */}
                   <div className="manager-project-card-top">
-                    <h3>{project.name}</h3>
+                    <h3>
+                      {project.name || project.title || "Untitled Project"}
+                    </h3>
 
                     <span
-                      className={`manager-project-priority priority-${(
-                        project.priority || "Medium"
-                      ).toLowerCase()}`}
+                      className={`manager-project-priority priority-${priority.toLowerCase()}`}
                     >
-                      {project.priority || "Medium"}
+                      {project.priority || "Not specified"}
                     </span>
                   </div>
 
@@ -419,11 +649,13 @@ function ManagerProjects({ user }) {
                     Department:{" "}
                     {project.department_name ||
                       project.department?.name ||
-                      project.department ||
+                      (typeof project.department !== "object"
+                        ? project.department
+                        : null) ||
                       "Not specified"}
                   </div>
 
-                  {/* Project Group Chat Button */}
+                  {/* Project actions */}
                   <div className="manager-project-chat-actions">
                     <button
                       type="button"
@@ -450,7 +682,7 @@ function ManagerProjects({ user }) {
         )}
       </section>
 
-      {/* Selected Project Group Chat */}
+      {/* Selected project group chat */}
       {selectedProject && (
         <section className="manager-project-chat-section">
           <div className="manager-project-chat-heading">
@@ -477,6 +709,8 @@ function ManagerProjects({ user }) {
           />
         </section>
       )}
+
+      {/* Project health analysis */}
       {selectedHealthProject && (
         <ProjectHealth
           key={selectedHealthProject.id}

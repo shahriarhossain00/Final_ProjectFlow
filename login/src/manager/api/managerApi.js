@@ -1,49 +1,77 @@
-// Manager API Service
-// Centralized API functions for Manager project management.
-// Uses the existing backend endpoints without backend changes.
+import { resolvePaginationUrl } from "../../services/pagination";
+
+// Manager API configuration.
 const API_BASE_URL = (
   import.meta.env.DEV
     ? import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000"
     : window.location.origin
 ).replace(/\/$/, "");
 
-// Common request handler
-// Adds authentication token and handles API errors.
-
-async function apiRequest(endpoint, options = {}) {
+// Retrieve the authentication token.
+function getToken() {
   const token = localStorage.getItem("accessToken");
 
-  const headers = {
-    Accept: "application/json",
-    ...(options.headers || {}),
-  };
-
-  // Attach JWT token to authenticated API requests.
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
+  if (!token) {
+    throw new Error("Session expired. Please log in again.");
   }
 
-  // Add JSON content type unless the request uses FormData.
-  if (!(options.body instanceof FormData)) {
-    headers["Content-Type"] = "application/json";
+  return token;
+}
+
+// Validate resource IDs.
+function validateId(value, resource = "Resource") {
+  const id = Number(value);
+
+  if (!Number.isSafeInteger(id) || id <= 0) {
+    throw new Error(`Invalid ${resource.toLowerCase()} ID.`);
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  return id;
+}
 
-  // Read response safely because some endpoints may return no body.
+// Centralized authenticated API request handler.
+async function apiRequest(endpoint, options = {}) {
+  const headers = new Headers(options.headers || {});
+
+  headers.set("Accept", "application/json");
+  headers.set("Authorization", `Bearer ${getToken()}`);
+
+  if (options.body !== undefined && !(options.body instanceof FormData)) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  let response;
+
+  try {
+    response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      headers,
+    });
+  } catch (error) {
+    if (error.name === "AbortError") {
+      throw error;
+    }
+
+    throw new Error("Cannot connect to the backend server.", {
+      cause: error,
+    });
+  }
+
   const responseData = await response.json().catch(() => null);
 
-  // Convert backend errors into readable frontend errors.
   if (!response.ok) {
-    let message = "Request failed.";
+    let message = `Request failed (${response.status}).`;
 
-    if (typeof responseData?.detail === "string") {
+    if (response.status === 401) {
+      message = "Session expired. Please log in again.";
+    } else if (response.status === 403) {
+      message = "You do not have permission.";
+    } else if (response.status === 404) {
+      message = "Requested resource not found.";
+    } else if (typeof responseData?.detail === "string") {
       message = responseData.detail;
     } else if (responseData && typeof responseData === "object") {
-      message = Object.entries(responseData)
+      const fieldMessages = Object.entries(responseData)
         .map(([field, errors]) => {
           const errorText = Array.isArray(errors)
             ? errors.join(", ")
@@ -52,100 +80,32 @@ async function apiRequest(endpoint, options = {}) {
           return `${field}: ${errorText}`;
         })
         .join("\n");
+
+      if (fieldMessages) {
+        message = fieldMessages;
+      }
     }
 
-    throw new Error(message || `HTTP ${response.status}`);
+    const error = new Error(message);
+
+    error.status = response.status;
+    error.fields = responseData;
+
+    throw error;
   }
 
   return responseData;
 }
 
-// Normalize list API responses.
-// Supports both normal arrays and paginated DRF responses.
-
-function normalizeList(response) {
-  if (Array.isArray(response)) {
-    return response;
-  }
-
-  if (Array.isArray(response?.results)) {
-    return response.results;
-  }
-
-  if (Array.isArray(response?.data)) {
-    return response.data;
-  }
-
-  return [];
-}
-
-// DEPARTMENT API
-
-// Fetch departments for the Project creation form.
-export async function getDepartments() {
-  const response = await apiRequest("/project/departments/");
-  return normalizeList(response);
-}
-
-// PROJECT API
-
-// Fetch existing projects.
-
-export async function getProjects() {
-  const response = await apiRequest("/project/projects/");
-  return normalizeList(response);
-}
-
-// Create a new project using the existing backend API.
-export async function createProject(projectData) {
-  return apiRequest("/project/projects/", {
-    method: "POST",
-    body: JSON.stringify(projectData),
-  });
-}
-
-// Update an existing project.
-export async function updateProject(projectId, projectData) {
-  return apiRequest(`/project/projects/${projectId}/`, {
-    method: "PATCH",
-    body: JSON.stringify(projectData),
-  });
-}
-
-// Fetch details of a specific project.
-export async function getProjectDetails(projectId) {
-  return apiRequest(`/project/projects/${projectId}/`);
-}
-// TASK API
-
-// Fetch all tasks from the existing backend API.
-export async function getTasks() {
-  const response = await apiRequest("/project/tasks/");
-  return normalizeList(response);
-}
-
-// Fetch tasks belonging to a specific user.
-export async function getUserTasks(userId) {
-  const response = await apiRequest(`/project/tasks/user/${userId}/`);
-  return normalizeList(response);
-}
-
-import { resolvePaginationUrl } from "../../services/pagination";
-
-export async function getMyManagedProjects(signal) {
-  const token = localStorage.getItem("accessToken");
-
-  if (!token) {
-    throw new Error("Session expired. Please log in again.");
-  }
-
-  const baseUrl = new URL(API_BASE_URL);
-  const allowedOrigin = baseUrl.origin;
-
-  let nextUrl = new URL("/project/all-projects/manager/", baseUrl).href;
-
-  const projects = [];
+// Fetch all pages from list endpoints.
+// Supports normal arrays and paginated DRF responses.
+async function fetchAllPages(endpoint, signal) {
+  const results = [];
   const visited = new Set();
+
+  const allowedOrigin = new URL(API_BASE_URL).origin;
+
+  let nextUrl = new URL(endpoint, `${API_BASE_URL}/`).href;
 
   while (nextUrl) {
     const url = new URL(nextUrl);
@@ -160,40 +120,93 @@ export async function getMyManagedProjects(signal) {
 
     visited.add(url.href);
 
-    const response = await fetch(
-      `${API_BASE_URL}${url.pathname}${url.search}`,
-      {
-        signal,
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-        },
-      },
-    );
+    const data = await apiRequest(`${url.pathname}${url.search}`, { signal });
 
-    if (!response.ok) {
-      throw new Error(
-        response.status === 403
-          ? "You do not have permission."
-          : `Failed to load managed projects (${response.status}).`,
-      );
-    }
-
-    const data = await response.json();
-
+    // Non-paginated response.
     if (Array.isArray(data)) {
-      projects.push(...data);
+      results.push(...data);
       break;
     }
 
-    if (!data || !Array.isArray(data.results)) {
+    // Standard Django REST Framework pagination.
+    if (Array.isArray(data?.results)) {
+      results.push(...data.results);
+    } else if (Array.isArray(data?.data)) {
+      results.push(...data.data);
+    } else {
       throw new Error("Unexpected API response format.");
     }
-
-    projects.push(...data.results);
 
     nextUrl = resolvePaginationUrl(data.next, url.href, API_BASE_URL);
   }
 
-  return projects;
+  return results;
+}
+
+// ==========================================
+// DEPARTMENT API
+// ==========================================
+
+// Fetch all departments.
+export function getDepartments(signal) {
+  return fetchAllPages("/project/departments/", signal);
+}
+
+// ==========================================
+// PROJECT API
+// ==========================================
+
+// Fetch projects from the general project endpoint.
+// Retained for compatibility with existing components.
+export function getProjects(signal) {
+  return fetchAllPages("/project/projects/", signal);
+}
+
+// Fetch projects managed by the authenticated manager.
+export function getMyManagedProjects(signal) {
+  return fetchAllPages("/project/all-projects/manager/", signal);
+}
+
+// Create a new project.
+export function createProject(projectData) {
+  return apiRequest("/project/projects/", {
+    method: "POST",
+    body: JSON.stringify(projectData),
+  });
+}
+
+// Update an existing project.
+export function updateProject(projectId, projectData) {
+  const id = validateId(projectId, "Project");
+
+  return apiRequest(`/project/projects/${id}/`, {
+    method: "PATCH",
+    body: JSON.stringify(projectData),
+  });
+}
+
+// Fetch details of a specific project.
+export function getProjectDetails(projectId, signal) {
+  const id = validateId(projectId, "Project");
+
+  return apiRequest(`/project/projects/${id}/`, {
+    signal,
+  });
+}
+
+// ==========================================
+// TASK API
+// ==========================================
+
+// Fetch tasks from the general task endpoint.
+// Retained for compatibility with existing components.
+export function getTasks(signal) {
+  return fetchAllPages("/project/tasks/", signal);
+}
+
+// Fetch tasks assigned to a specific user.
+export function getUserTasks(userId, signal) {
+  const id = validateId(userId, "User");
+
+  return fetchAllPages(`/project/tasks/user/${id}/`, signal);
 }

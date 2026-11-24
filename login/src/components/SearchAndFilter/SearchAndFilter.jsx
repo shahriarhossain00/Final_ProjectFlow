@@ -2,7 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 
 import { getProjects } from "../../services/projectApi";
 import { getTasks } from "../../services/taskApi";
-import { getMyManagedProjects } from "../../manager/api/managerApi";
+
+import {
+  getMyManagedProjects,
+  getUserTasks,
+} from "../../manager/api/managerApi";
+
 import { getEmployeeTasks } from "../../employee/api/employeeTasksApi";
 
 import "./SearchAndFilter.css";
@@ -17,14 +22,17 @@ const STATUS_OPTIONS = [
   "On Hold",
 ];
 
+// Normalize project name.
 function getProjectName(project) {
   return String(project.name ?? project.projectName ?? project.title ?? "");
 }
 
+// Normalize task title.
 function getTaskTitle(task) {
   return String(task.title ?? task.name ?? "");
 }
 
+// Extract assigned user ID.
 function getAssignedUserId(task) {
   if (task.assigned_to && typeof task.assigned_to === "object") {
     return task.assigned_to.id;
@@ -33,6 +41,7 @@ function getAssignedUserId(task) {
   return task.assigned_to;
 }
 
+// Extract project ID from a task.
 function getProjectId(task) {
   if (task.project && typeof task.project === "object") {
     return task.project.id;
@@ -41,6 +50,7 @@ function getProjectId(task) {
   return task.project;
 }
 
+// Extract project name from a task.
 function getTaskProjectName(task) {
   return (
     task.project_title ||
@@ -49,6 +59,7 @@ function getTaskProjectName(task) {
   );
 }
 
+// Build related projects from employee tasks.
 function buildEmployeeProjects(tasks) {
   const projectMap = new Map();
 
@@ -65,7 +76,6 @@ function buildEmployeeProjects(tasks) {
       projectMap.set(key, {
         id: projectId,
         name: getTaskProjectName(task),
-        // The employee task API does not supply project status.
         status: null,
       });
     }
@@ -74,6 +84,7 @@ function buildEmployeeProjects(tasks) {
   return Array.from(projectMap.values());
 }
 
+// Apply search and status filters.
 function matchesFilters(item, type, filters) {
   const name = type === "project" ? getProjectName(item) : getTaskTitle(item);
 
@@ -93,10 +104,12 @@ export default function SearchAndFilter({ role = "Admin", userId }) {
   const isManager = role === "Manager";
   const isEmployee = role === "Employee";
 
+  // Search filter state
   const [search, setSearch] = useState("");
   const [searchIn, setSearchIn] = useState("all");
   const [status, setStatus] = useState("All Statuses");
 
+  // API data state
   const [projects, setProjects] = useState([]);
   const [tasks, setTasks] = useState([]);
 
@@ -104,9 +117,11 @@ export default function SearchAndFilter({ role = "Admin", userId }) {
   const [error, setError] = useState("");
   const [appliedFilters, setAppliedFilters] = useState(null);
 
-  // Client-side pagination for the filtered search results.
+  // Pagination and refresh state
   const [currentPage, setCurrentPage] = useState(1);
+  const [refreshKey, setRefreshKey] = useState(0);
 
+  // Fetch data according to the current user's role.
   useEffect(() => {
     const controller = new AbortController();
 
@@ -119,6 +134,7 @@ export default function SearchAndFilter({ role = "Admin", userId }) {
       setCurrentPage(1);
 
       try {
+        // Admin: all accessible projects and tasks.
         if (isAdmin) {
           const [projectData, taskData] = await Promise.all([
             getProjects(controller.signal),
@@ -129,13 +145,29 @@ export default function SearchAndFilter({ role = "Admin", userId }) {
 
           setProjects(projectData);
           setTasks(taskData);
-        } else if (isManager) {
-          const projectData = await getMyManagedProjects(controller.signal);
+        }
+
+        // Manager: managed projects and assigned tasks.
+        else if (isManager) {
+          const managerId = Number(userId);
+
+          if (!Number.isSafeInteger(managerId) || managerId <= 0) {
+            throw new Error("Invalid manager ID.");
+          }
+
+          const [projectData, taskData] = await Promise.all([
+            getMyManagedProjects(controller.signal),
+            getUserTasks(managerId, controller.signal),
+          ]);
 
           if (controller.signal.aborted) return;
 
           setProjects(projectData);
-        } else if (isEmployee) {
+          setTasks(taskData);
+        }
+
+        // Employee: assigned tasks and related projects.
+        else if (isEmployee) {
           const employeeId = Number(userId);
 
           if (!Number.isSafeInteger(employeeId) || employeeId <= 0) {
@@ -149,7 +181,6 @@ export default function SearchAndFilter({ role = "Admin", userId }) {
 
           if (controller.signal.aborted) return;
 
-          // Defense in depth: only show tasks assigned to this user.
           const myTasks = taskData.filter(
             (task) => Number(getAssignedUserId(task)) === employeeId,
           );
@@ -163,6 +194,7 @@ export default function SearchAndFilter({ role = "Admin", userId }) {
         if (controller.signal.aborted) return;
 
         console.error("Search data fetch error:", err);
+
         setError(err.message || "Failed to load search data.");
       } finally {
         if (!controller.signal.aborted) {
@@ -174,8 +206,9 @@ export default function SearchAndFilter({ role = "Admin", userId }) {
     loadData();
 
     return () => controller.abort();
-  }, [isAdmin, isManager, isEmployee, userId]);
+  }, [isAdmin, isManager, isEmployee, userId, refreshKey]);
 
+  // Build filtered search results.
   const results = useMemo(() => {
     if (!appliedFilters) {
       return [];
@@ -196,20 +229,21 @@ export default function SearchAndFilter({ role = "Admin", userId }) {
             }));
 
     const matchedTasks =
-      isManager || appliedFilters.searchIn === "projects"
+      appliedFilters.searchIn === "projects"
         ? []
         : tasks
             .filter((task) => matchesFilters(task, "task", appliedFilters))
             .map((task) => ({
-              id: `task-${task.id}`,
+              id: `task-${task.id ?? task.task_id}`,
               type: "Task",
               name: getTaskTitle(task),
               status: task.status || "Unknown",
             }));
 
     return [...matchedProjects, ...matchedTasks];
-  }, [appliedFilters, projects, tasks, isManager]);
+  }, [appliedFilters, projects, tasks]);
 
+  // Calculate pagination.
   const totalPages = Math.ceil(results.length / PAGE_SIZE);
 
   const paginatedResults = useMemo(() => {
@@ -218,6 +252,7 @@ export default function SearchAndFilter({ role = "Admin", userId }) {
     return results.slice(startIndex, startIndex + PAGE_SIZE);
   }, [results, currentPage]);
 
+  // Apply search filters.
   const handleSearch = (event) => {
     event.preventDefault();
 
@@ -225,11 +260,12 @@ export default function SearchAndFilter({ role = "Admin", userId }) {
 
     setAppliedFilters({
       search: search.trim(),
-      searchIn: isManager ? "projects" : searchIn,
+      searchIn,
       status,
     });
   };
 
+  // Reset search filters.
   const handleReset = () => {
     setSearch("");
     setSearchIn("all");
@@ -238,6 +274,12 @@ export default function SearchAndFilter({ role = "Admin", userId }) {
     setCurrentPage(1);
   };
 
+  // Retry failed requests.
+  const handleRetry = () => {
+    setRefreshKey((previous) => previous + 1);
+  };
+
+  // Pagination controls.
   const handlePreviousPage = () => {
     setCurrentPage((page) => Math.max(1, page - 1));
   };
@@ -246,19 +288,30 @@ export default function SearchAndFilter({ role = "Admin", userId }) {
     setCurrentPage((page) => Math.min(totalPages, page + 1));
   };
 
+  // Role-specific page description.
   const description = isManager
-    ? "Find projects managed by you."
+    ? "Find your managed projects and assigned tasks."
     : isEmployee
       ? "Find your assigned tasks and related projects."
       : "Find projects and tasks quickly.";
+
+  // Dynamic search placeholder.
+  const searchPlaceholder =
+    searchIn === "projects"
+      ? "Enter project name..."
+      : searchIn === "tasks"
+        ? "Enter task title..."
+        : "Enter project name or task title...";
 
   return (
     <section className="search-filter-page">
       <div className="search-filter-header">
         <h1>Search & Filter</h1>
+
         <p>{description}</p>
       </div>
 
+      {/* Search form */}
       <form className="search-filter-panel" onSubmit={handleSearch}>
         <div className="search-filter-field search-filter-full">
           <label htmlFor="global-search">Search</label>
@@ -266,33 +319,30 @@ export default function SearchAndFilter({ role = "Admin", userId }) {
           <input
             id="global-search"
             type="search"
-            placeholder={
-              isManager
-                ? "Enter project name..."
-                : "Enter project name or task title..."
-            }
+            placeholder={searchPlaceholder}
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
         </div>
 
+        {/* Search scope */}
         <div className="search-filter-field">
           <label htmlFor="search-in">Search In</label>
 
           <select
             id="search-in"
-            value={isManager ? "projects" : searchIn}
-            disabled={isManager}
+            value={searchIn}
             onChange={(event) => setSearchIn(event.target.value)}
           >
-            {!isManager && <option value="all">All</option>}
+            <option value="all">All</option>
 
             <option value="projects">Projects</option>
 
-            {!isManager && <option value="tasks">Tasks</option>}
+            <option value="tasks">Tasks</option>
           </select>
         </div>
 
+        {/* Status filter */}
         <div className="search-filter-field">
           <label htmlFor="status-filter">Filter by Status</label>
 
@@ -309,6 +359,7 @@ export default function SearchAndFilter({ role = "Admin", userId }) {
           </select>
         </div>
 
+        {/* Search actions */}
         <div className="search-filter-actions">
           <button
             type="submit"
@@ -328,12 +379,25 @@ export default function SearchAndFilter({ role = "Admin", userId }) {
         </div>
       </form>
 
+      {/* Search results */}
       <div className="search-filter-results">
         <h2>Results</h2>
 
         {loading && <p role="status">Loading search data...</p>}
 
-        {!loading && error && <p role="alert">{error}</p>}
+        {!loading && error && (
+          <div>
+            <p role="alert">{error}</p>
+
+            <button
+              type="button"
+              className="search-filter-reset"
+              onClick={handleRetry}
+            >
+              Retry
+            </button>
+          </div>
+        )}
 
         {!loading && !error && !appliedFilters && (
           <p>Use the filters above and click Search to find results.</p>
@@ -354,7 +418,8 @@ export default function SearchAndFilter({ role = "Admin", userId }) {
                   {paginatedResults.map((item) => (
                     <div key={item.id} className="search-filter-result-item">
                       <div>
-                        <strong>{item.name}</strong>
+                        <strong>{item.name || "Untitled"}</strong>
+
                         <p>{item.type}</p>
                       </div>
 
@@ -365,6 +430,7 @@ export default function SearchAndFilter({ role = "Admin", userId }) {
                   ))}
                 </div>
 
+                {/* Pagination */}
                 {totalPages > 1 && (
                   <div
                     style={{
@@ -410,12 +476,6 @@ export default function SearchAndFilter({ role = "Admin", userId }) {
           </>
         )}
       </div>
-
-      {isManager && (
-        <p className="search-filter-scope-note">
-          Task search is currently unavailable for Manager accounts.
-        </p>
-      )}
     </section>
   );
 }

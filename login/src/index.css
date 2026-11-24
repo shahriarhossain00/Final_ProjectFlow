@@ -1,10 +1,37 @@
+/* ========================================
+   GLOBAL TYPOGRAPHY SYSTEM
+======================================== */
+
+:root {
+  --font-family: Arial, sans-serif;
+
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-base: 16px;
+  --font-size-md: 17px;
+  --font-size-lg: 20px;
+  --font-size-xl: 24px;
+  --font-size-2xl: 30px;
+
+  --line-height-normal: 1.6;
+  --line-height-heading: 1.4;
+}
+
+/* Global Reset */
+
 * {
   box-sizing: border-box;
 }
 
+html {
+  font-size: 16px;
+}
+
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
   background-color: #f8fafc;
   color: #1e293b;
 }
@@ -12,4 +39,489 @@ body {
 #root {
   width: 100%;
   min-height: 100vh;
+}
+
+/* ========================================
+   GLOBAL FORM TYPOGRAPHY
+======================================== */
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+button {
+  font-size: var(--font-size-sm);
+}
+
+input,
+select,
+textarea {
+  font-size: var(--font-size-base);
+}
+
+label {
+  font-size: var(--font-size-sm);
+}
+
+/* ========================================
+   ADMIN DASHBOARD TYPOGRAPHY
+======================================== */
+
+/* Sidebar */
+
+#root .dashboard-container .sidebar nav .sidebar-link {
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+#root .dashboard-container .brand-text h2 {
+  font-size: 20px;
+}
+
+#root .dashboard-container .brand-text span {
+  font-size: 13px;
+}
+
+#root .dashboard-container .sidebar-label {
+  font-size: 12px;
+}
+
+#root .dashboard-container .sidebar-profile strong {
+  font-size: 16px;
+}
+
+#root .dashboard-container .sidebar-profile small {
+  font-size: 13px;
+}
+
+#root .dashboard-container .sidebar-bottom .logout-btn {
+  font-size: 15px;
+}
+
+/* Navbar */
+
+#root .dashboard-container .navbar h2 {
+  font-size: 23px;
+}
+
+#root .dashboard-container .navbar-left p {
+  font-size: 14px;
+}
+
+#root .dashboard-container .navbar-right {
+  font-size: 16px;
+}
+
+/* Dashboard Heading */
+
+#root .dashboard-container .dashboard-heading h1 {
+  font-size: clamp(25px, 2.5vw, 34px);
+  line-height: 1.4;
+}
+
+#root .dashboard-container .dashboard-heading p {
+  font-size: 16px;
+}
+
+/* Statistics */
+
+#root .dashboard-container .stat-card span {
+  font-size: 15px;
+}
+
+#root .dashboard-container .stat-card strong {
+  font-size: 38px;
+}
+
+/* Project Health Overview */
+
+#root .dashboard-container .admin-health-heading h2 {
+  font-size: 23px;
+}
+
+#root .dashboard-container .admin-health-heading p,
+#root .dashboard-container .admin-health-note {
+  font-size: 15px;
+}
+
+#root .dashboard-container .admin-health-stat span {
+  font-size: 15px;
+}
+
+#root .dashboard-container .admin-health-stat strong {
+  font-size: 32px;
+}
+
+/* ========================================
+   DASHBOARD PROJECT CARDS
+======================================== */
+
+#root .dashboard-container .summary-card > h3 {
+  font-size: 21px;
+  line-height: 1.4;
+}
+
+#root .dashboard-container .summary-card > p {
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* Project Health Card */
+
+#root .dashboard-container .admin-project-health-top strong {
+  font-size: 16px;
+}
+
+#root .dashboard-container .admin-project-health-score {
+  font-size: 15px;
+}
+
+#root .dashboard-container .admin-project-health-score strong {
+  font-size: 25px;
+}
+
+#root .dashboard-container .admin-health-badge {
+  font-size: 12px;
+}
+
+#root .dashboard-container .admin-health-analyze-btn,
+#root .dashboard-container .admin-health-view-btn {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+#root .dashboard-container .admin-health-error {
+  font-size: 14px;
+}
+
+/* Members and Tasks */
+
+#root .dashboard-container .overview-section h4 {
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+#root .dashboard-container .overview-section > p {
+  font-size: 15px;
+}
+
+#root .dashboard-container .overview-member {
+  font-size: 15px;
+}
+
+#root .dashboard-container .overview-member span:last-child {
+  font-size: 12px;
+}
+
+#root .dashboard-container .overview-task strong {
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+#root .dashboard-container .overview-task small {
+  font-size: 13px;
+}
+
+#root .dashboard-container .overview-task .details-status {
+  font-size: 12px;
+  white-space: normal;
+}
+
+/* ========================================
+   PAGE HEADINGS
+======================================== */
+
+#root
+  :is(
+    .all-members-page,
+    .create-project-page,
+    .task-list-page,
+    .task-assignment-page
+  )
+  > h2 {
+  font-size: 30px;
+  line-height: 1.4;
+}
+
+#root :is(.page-subtitle, .project-page-subtitle, .task-list-subtitle) {
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+/* ========================================
+   ALL MEMBERS
+======================================== */
+
+#root .all-members-page .members-table-card h3 {
+  font-size: 22px;
+}
+
+#root .all-members-page .members-table th {
+  font-size: 13px;
+}
+
+#root .all-members-page .members-table td {
+  font-size: 16px;
+}
+
+#root .all-members-page .members-table td:first-child {
+  font-size: 15px;
+}
+
+#root .all-members-page .members-table td:nth-child(3) {
+  font-size: 15px;
+}
+
+#root .all-members-page button {
+  font-size: 14px;
+}
+
+/* ========================================
+   CREATE PROJECT
+======================================== */
+
+#root .create-project-page .create-project-form h3,
+#root .create-project-page .projects-table-card h3 {
+  font-size: 23px;
+}
+
+#root .create-project-page .create-project-form label {
+  font-size: 15px;
+}
+
+#root .create-project-page .create-project-form input,
+#root .create-project-page .create-project-form textarea,
+#root .create-project-page .create-project-form select {
+  font-size: 16px;
+}
+
+#root .create-project-page .project-form-actions button {
+  font-size: 15px;
+}
+
+#root .create-project-page .projects-table th {
+  font-size: 13px;
+}
+
+#root .create-project-page .projects-table td {
+  font-size: 15px;
+}
+
+#root .create-project-page .project-table-actions button {
+  font-size: 14px;
+}
+
+/* Project Modals */
+
+#root .project-edit-modal .edit-modal-header h3,
+#root .project-delete-modal h3 {
+  font-size: 24px;
+}
+
+#root .project-edit-modal .edit-modal-header p {
+  font-size: 15px;
+}
+
+#root .project-edit-modal .edit-modal-body label,
+#root .project-delete-modal label {
+  font-size: 15px;
+}
+
+#root .project-edit-modal .edit-modal-body input,
+#root .project-edit-modal .edit-modal-body textarea,
+#root .project-edit-modal .edit-modal-body select {
+  font-size: 16px;
+}
+
+#root .project-edit-modal .edit-modal-footer button,
+#root .project-delete-modal .project-delete-actions button {
+  font-size: 15px;
+}
+
+#root .project-delete-modal p,
+#root .project-delete-modal .delete-warning {
+  font-size: 15px;
+}
+
+/* ========================================
+   TASK LIST
+======================================== */
+
+#root .task-list-page .task-project-count {
+  font-size: 14px;
+}
+
+#root .task-list-page .task-project-header h3 {
+  font-size: 21px;
+}
+
+#root .task-list-page .task-project-header p {
+  font-size: 15px;
+}
+
+#root .task-list-page .task-count-badge {
+  font-size: 13px;
+}
+
+#root .task-list-page .task-input input,
+#root .task-list-page .task-input button {
+  font-size: 15px;
+}
+
+#root .task-list-page .task-title-row h4 {
+  font-size: 17px;
+}
+
+#root .task-list-page .task-edit-btn,
+#root .task-list-page .task-delete-btn {
+  font-size: 13px;
+}
+
+#root .task-list-page .task-control-group label {
+  font-size: 14px;
+}
+
+#root .task-list-page .task-control-group select {
+  font-size: 14px;
+}
+
+#root .task-list-page .task-footer > span:first-child {
+  font-size: 14px;
+}
+
+#root .task-list-page .task-status {
+  font-size: 13px;
+  white-space: normal;
+}
+
+#root .task-list-page .task-empty {
+  font-size: 15px;
+}
+
+/* Task Edit Modal */
+
+#root .task-modal h3 {
+  font-size: 24px;
+}
+
+#root .task-modal label {
+  font-size: 15px;
+}
+
+#root .task-modal input,
+#root .task-modal textarea,
+#root .task-modal select {
+  font-size: 16px;
+}
+
+#root .task-modal .task-modal-actions button {
+  font-size: 15px;
+}
+
+/* ========================================
+   TASK ASSIGNMENT FORM
+======================================== */
+
+#root .task-assignment-page .task-control-group label {
+  font-size: 15px;
+}
+
+#root .task-assignment-page .task-control-group input,
+#root .task-assignment-page .task-control-group textarea,
+#root .task-assignment-page .task-control-group select {
+  font-size: 16px;
+}
+
+#root .task-assignment-page .task-control-group input[type="file"] {
+  font-size: 14px;
+}
+
+#root .task-assignment-page input[type="file"]::file-selector-button {
+  font-size: 14px;
+}
+
+#root .task-assignment-page .task-control-group small {
+  font-size: 14px;
+}
+
+#root .task-assignment-page .task-modal-actions button {
+  font-size: 15px;
+}
+
+/* ========================================
+   SHARED FEEDBACK MESSAGES
+======================================== */
+
+#root
+  :is(
+    .all-members-page,
+    .create-project-page,
+    .task-list-page,
+    .task-assignment-page
+  )
+  :is(.form-success, .form-error) {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ========================================
+   RESPONSIVE TYPOGRAPHY
+======================================== */
+
+@media (max-width: 768px) {
+  #root
+    :is(
+      .all-members-page,
+      .create-project-page,
+      .task-list-page,
+      .task-assignment-page
+    )
+    > h2 {
+    font-size: 26px;
+  }
+
+  #root .dashboard-container .navbar h2 {
+    font-size: 20px;
+  }
+
+  #root .dashboard-container .summary-card > h3 {
+    font-size: 20px;
+  }
+
+  #root .dashboard-container .stat-card strong {
+    font-size: 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  #root .dashboard-container .navbar h2 {
+    font-size: 18px;
+  }
+
+  #root .dashboard-container .stat-card span {
+    font-size: 14px;
+  }
+
+  #root .dashboard-container .stat-card strong {
+    font-size: 30px;
+  }
+
+  #root .dashboard-container .overview-task strong {
+    font-size: 14px;
+  }
+
+  #root .dashboard-container .overview-task small {
+    font-size: 13px;
+  }
+
+  #root .dashboard-container .admin-health-badge {
+    font-size: 11px;
+  }
+
+  #root .task-list-page .task-title-row h4 {
+    font-size: 16px;
+  }
 }

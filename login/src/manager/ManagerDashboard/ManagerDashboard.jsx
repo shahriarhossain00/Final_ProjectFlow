@@ -2,44 +2,51 @@ import { useEffect, useState } from "react";
 import "./ManagerDashboard.css";
 
 import ManagerProjects from "../ManagerProjects/ManagerProjects";
-import { getProjects, getTasks } from "../api/managerApi";
+import { getMyManagedProjects, getUserTasks } from "../api/managerApi";
 import SearchAndFilter from "../../components/SearchAndFilter/SearchAndFilter";
 import NotificationBell from "../../features/notifications/NotificationBell";
-// Manager's main workspace.
+import TaskAssignmentForm from "../../components/TaskAssignmentForm/TaskAssignmentForm";
+
 function ManagerDashboard({ user, onLogout, isLoggingOut }) {
   const [activeSection, setActiveSection] = useState("overview");
 
-  // Store tasks fetched from the backend.
+  // Task state
   const [tasks, setTasks] = useState([]);
   const [isLoadingTasks, setIsLoadingTasks] = useState(true);
   const [taskError, setTaskError] = useState("");
+  const [taskRefresh, setTaskRefresh] = useState(0);
 
-  // Store projects fetched from the backend.
+  // Project state
   const [projects, setProjects] = useState([]);
   const [isLoadingProjects, setIsLoadingProjects] = useState(true);
   const [projectError, setProjectError] = useState("");
 
-  // Fetch projects when the dashboard loads.
+  // Task creation state
+  const [showCreateTask, setShowCreateTask] = useState(false);
+  const [selectedProjectId, setSelectedProjectId] = useState("");
+
+  // Fetch managed projects.
   useEffect(() => {
-    let cancelled = false;
+    const controller = new AbortController();
 
     const loadProjects = async () => {
       try {
         setIsLoadingProjects(true);
         setProjectError("");
 
-        const projectData = await getProjects();
+        const projectData = await getMyManagedProjects(controller.signal);
 
-        if (!cancelled) {
+        if (!controller.signal.aborted) {
           setProjects(projectData);
         }
       } catch (error) {
-        if (!cancelled) {
+        if (!controller.signal.aborted) {
           console.error("Failed to load manager projects:", error);
+          setProjects([]);
           setProjectError(error.message || "Failed to load projects.");
         }
       } finally {
-        if (!cancelled) {
+        if (!controller.signal.aborted) {
           setIsLoadingProjects(false);
         }
       }
@@ -47,32 +54,36 @@ function ManagerDashboard({ user, onLogout, isLoggingOut }) {
 
     loadProjects();
 
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    return () => controller.abort();
+  }, [user?.id, activeSection]);
 
-  // Fetch tasks when the dashboard loads.
+  // Fetch tasks assigned to the current manager.
   useEffect(() => {
-    let cancelled = false;
+    const controller = new AbortController();
 
     const loadTasks = async () => {
       try {
         setIsLoadingTasks(true);
         setTaskError("");
 
-        const taskData = await getTasks();
+        const managerId = Number(user?.id);
 
-        if (!cancelled) {
+        if (!Number.isSafeInteger(managerId) || managerId <= 0) {
+          throw new Error("Invalid manager ID.");
+        }
+
+        const taskData = await getUserTasks(managerId, controller.signal);
+
+        if (!controller.signal.aborted) {
           setTasks(taskData);
         }
       } catch (error) {
-        if (!cancelled) {
-          console.error("Failed to load manager tasks:", error);
+        if (!controller.signal.aborted) {
+          setTasks([]);
           setTaskError(error.message || "Failed to load tasks.");
         }
       } finally {
-        if (!cancelled) {
+        if (!controller.signal.aborted) {
           setIsLoadingTasks(false);
         }
       }
@@ -80,12 +91,10 @@ function ManagerDashboard({ user, onLogout, isLoggingOut }) {
 
     loadTasks();
 
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    return () => controller.abort();
+  }, [user?.id, activeSection, taskRefresh]);
 
-  // Navigation items available to the Manager.
+  // Navigation items
   const navigationItems = [
     { id: "overview", label: "Overview" },
     { id: "projects", label: "My Projects" },
@@ -96,6 +105,38 @@ function ManagerDashboard({ user, onLogout, isLoggingOut }) {
   const activeTitle =
     navigationItems.find((item) => item.id === activeSection)?.label ||
     "Dashboard";
+
+  const completedTasksCount = tasks.filter(
+    (task) => String(task.status ?? "").toLowerCase() === "completed",
+  ).length;
+
+  // Open task creation form.
+  const handleOpenCreateTask = () => {
+    setSelectedProjectId("");
+    setShowCreateTask(true);
+    setActiveSection("tasks");
+  };
+
+  // Close task creation form.
+  const handleCloseCreateTask = () => {
+    setShowCreateTask(false);
+    setSelectedProjectId("");
+  };
+
+  // Refresh tasks after successful creation.
+  const handleTaskCreated = () => {
+    handleCloseCreateTask();
+    setTaskRefresh((previous) => previous + 1);
+  };
+
+  // Handle sidebar navigation.
+  const handleNavigation = (section) => {
+    if (section !== "tasks") {
+      handleCloseCreateTask();
+    }
+
+    setActiveSection(section);
+  };
 
   return (
     <div className="manager-layout">
@@ -122,7 +163,7 @@ function ManagerDashboard({ user, onLogout, isLoggingOut }) {
                   : "manager-nav-item"
               }
               aria-current={activeSection === item.id ? "page" : undefined}
-              onClick={() => setActiveSection(item.id)}
+              onClick={() => handleNavigation(item.id)}
             >
               {item.label}
             </button>
@@ -138,6 +179,7 @@ function ManagerDashboard({ user, onLogout, isLoggingOut }) {
 
             <div className="manager-user-text">
               <strong>{user?.username || "Manager"}</strong>
+
               <span>Manager</span>
             </div>
           </div>
@@ -158,13 +200,16 @@ function ManagerDashboard({ user, onLogout, isLoggingOut }) {
         <header className="manager-header">
           <div>
             <p className="manager-eyebrow">Manager Workspace</p>
+
             <h1>{activeSection === "overview" ? "Dashboard" : activeTitle}</h1>
           </div>
 
           <div className="manager-header-actions">
             <NotificationBell />
 
-            <div className="manager-header-user">Welcome, {user?.username}</div>
+            <div className="manager-header-user">
+              Welcome, {user?.username || "Manager"}
+            </div>
           </div>
         </header>
 
@@ -184,7 +229,7 @@ function ManagerDashboard({ user, onLogout, isLoggingOut }) {
               <button
                 type="button"
                 className="manager-primary-button"
-                onClick={() => setActiveSection("projects")}
+                onClick={() => handleNavigation("projects")}
               >
                 Create or view projects
               </button>
@@ -203,7 +248,7 @@ function ManagerDashboard({ user, onLogout, isLoggingOut }) {
                       : projects.length}
                 </strong>
 
-                <small>Projects available in the API</small>
+                <small>Projects managed by you</small>
               </div>
 
               <div className="manager-stat-card">
@@ -213,29 +258,21 @@ function ManagerDashboard({ user, onLogout, isLoggingOut }) {
                   {isLoadingTasks ? "..." : taskError ? "—" : tasks.length}
                 </strong>
 
-                <small>Tasks across your projects</small>
+                <small>Tasks assigned to you</small>
               </div>
 
               <div className="manager-stat-card">
-                <span>Team Members</span>
+                <span>Completed Tasks</span>
 
                 <strong>
                   {isLoadingTasks
                     ? "..."
                     : taskError
                       ? "—"
-                      : new Set(
-                          tasks
-                            .map((task) =>
-                              typeof task.assigned_to === "object"
-                                ? task.assigned_to?.id
-                                : task.assigned_to,
-                            )
-                            .filter(Boolean),
-                        ).size}
+                      : completedTasksCount}
                 </strong>
 
-                <small>Unique members assigned to tasks</small>
+                <small>Your completed tasks</small>
               </div>
             </div>
 
@@ -246,7 +283,7 @@ function ManagerDashboard({ user, onLogout, isLoggingOut }) {
 
                 <button
                   type="button"
-                  onClick={() => setActiveSection("projects")}
+                  onClick={() => handleNavigation("projects")}
                 >
                   View all
                 </button>
@@ -257,7 +294,7 @@ function ManagerDashboard({ user, onLogout, isLoggingOut }) {
               ) : projectError ? (
                 <p className="manager-error-message">{projectError}</p>
               ) : projects.length === 0 ? (
-                <p>No projects found. Create your first project.</p>
+                <p>No managed projects found.</p>
               ) : (
                 <div className="manager-overview-project-list">
                   {projects.slice(0, 3).map((project) => (
@@ -290,12 +327,12 @@ function ManagerDashboard({ user, onLogout, isLoggingOut }) {
 
               <button
                 type="button"
-                onClick={() => setActiveSection("projects")}
+                onClick={() => handleNavigation("projects")}
               >
                 + Create Project
               </button>
 
-              <button type="button" onClick={() => setActiveSection("tasks")}>
+              <button type="button" onClick={handleOpenCreateTask}>
                 + Create Task
               </button>
             </div>
@@ -310,15 +347,94 @@ function ManagerDashboard({ user, onLogout, isLoggingOut }) {
           <section className="manager-content-card">
             <div className="manager-section-heading">
               <h2>My Tasks</h2>
-              <span>{tasks.length} Tasks</span>
+
+              <span>
+                {isLoadingTasks
+                  ? "Loading..."
+                  : taskError
+                    ? "Unavailable"
+                    : `${tasks.length} Tasks`}
+              </span>
+
+              <button
+                type="button"
+                onClick={() => setTaskRefresh((previous) => previous + 1)}
+                disabled={isLoadingTasks}
+              >
+                Refresh
+              </button>
+
+              <button
+                type="button"
+                onClick={
+                  showCreateTask ? handleCloseCreateTask : handleOpenCreateTask
+                }
+              >
+                {showCreateTask ? "Cancel" : "+ Create Task"}
+              </button>
             </div>
 
+            {/* Task creation form */}
+            {showCreateTask && (
+              <div className="manager-content-card">
+                <h3>Create & Assign Task</h3>
+
+                <div className="task-control-group">
+                  <label htmlFor="manager-task-project">Select Project *</label>
+
+                  <select
+                    id="manager-task-project"
+                    value={selectedProjectId}
+                    onChange={(event) =>
+                      setSelectedProjectId(event.target.value)
+                    }
+                    disabled={isLoadingProjects || Boolean(projectError)}
+                  >
+                    <option value="">Select a project</option>
+
+                    {projects.map((project) => (
+                      <option key={project.id} value={project.id}>
+                        {project.name || project.title || "Untitled Project"}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {isLoadingProjects && <p>Loading projects...</p>}
+
+                {projectError && (
+                  <p className="manager-error-message">{projectError}</p>
+                )}
+
+                {!isLoadingProjects &&
+                  !projectError &&
+                  projects.length === 0 && (
+                    <p>No managed projects available.</p>
+                  )}
+
+                {!isLoadingProjects &&
+                  !projectError &&
+                  selectedProjectId &&
+                  projects.some(
+                    (project) => String(project.id) === selectedProjectId,
+                  ) && (
+                    <TaskAssignmentForm
+                      key={selectedProjectId}
+                      projectId={Number(selectedProjectId)}
+                      onSuccess={handleTaskCreated}
+                      onCancel={handleCloseCreateTask}
+                    />
+                  )}
+              </div>
+            )}
+
+            {/* Assigned task results */}
             {isLoadingTasks ? (
               <p>Loading tasks...</p>
             ) : taskError ? (
               <p className="manager-error-message">{taskError}</p>
             ) : tasks.length === 0 ? (
-              <p>No tasks found.</p>
+              <p>No tasks assigned to you yet.</p>
             ) : (
               <div className="manager-overview-project-list">
                 {tasks.map((task) => (
@@ -331,15 +447,24 @@ function ManagerDashboard({ user, onLogout, isLoggingOut }) {
 
                       <p>{task.description || "No description available"}</p>
 
-                      <p>Project: {task.project_title || "Unknown Project"}</p>
+                      <p>
+                        Project:{" "}
+                        {task.project_title ||
+                          task.project?.name ||
+                          task.project?.title ||
+                          "Unknown Project"}
+                      </p>
 
                       <p>
                         Assigned to:{" "}
                         {typeof task.assigned_to === "object"
                           ? task.assigned_to?.username ||
                             task.assigned_to?.name ||
+                            task.assigned_to_name ||
+                            user?.username ||
                             "Unknown"
                           : task.assigned_to_name ||
+                            user?.username ||
                             task.assigned_to ||
                             "Unknown"}
                       </p>
@@ -357,7 +482,7 @@ function ManagerDashboard({ user, onLogout, isLoggingOut }) {
 
         {/* Manager Search & Filter */}
         {activeSection === "search-filter" && (
-          <SearchAndFilter role="Manager" />
+          <SearchAndFilter role="Manager" userId={user?.id} />
         )}
       </main>
     </div>

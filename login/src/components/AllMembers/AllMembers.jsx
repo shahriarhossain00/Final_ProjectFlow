@@ -1,85 +1,93 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getEmployees } from "../../services/taskApi";
 import "./AllMembers.css";
 
-const roles = ["Frontend", "Backend", "UI/UX", "DevOps", "QA", "Cybersecurity"];
-
-function AllMembers({ members, onAddMember }) {
-  const [name, setName] = useState("");
-  const [role, setRole] = useState("");
-  const [message, setMessage] = useState("");
+function AllMembers() {
+  const [members, setMembers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
+  useEffect(() => {
+    const controller = new AbortController();
 
-    setMessage("");
-    setError("");
+    async function loadMembers() {
+      setLoading(true);
+      setError("");
 
-    const memberName = name.trim();
+      try {
+        const data = await getEmployees(controller.signal);
 
-    if (!memberName || !role) {
-      setError("Please enter a name and select a role.");
-      return;
+        if (controller.signal.aborted) return;
+
+        const normalizedMembers = data.map((employee) => ({
+          id: employee.id,
+          username: employee.username || `User #${employee.id}`,
+          role: "Employee",
+        }));
+
+        setMembers(normalizedMembers);
+      } catch (err) {
+        if (controller.signal.aborted) return;
+
+        setMembers([]);
+        setError(err.message || "Failed to load members.");
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      }
     }
 
-    const alreadyExists = members.some(
-      (member) => member.name.toLowerCase() === memberName.toLowerCase(),
-    );
+    loadMembers();
 
-    if (alreadyExists) {
-      setError("A member with this name already exists.");
-      return;
-    }
+    return () => controller.abort();
+  }, [refreshKey]);
 
-    const newMember = {
-      id: crypto.randomUUID(),
-      name: memberName,
-      role,
-    };
-
-    onAddMember(newMember);
-
-    setName("");
-    setRole("");
-    setMessage(`${memberName} added successfully!`);
+  const handleRefresh = () => {
+    setRefreshKey((previous) => previous + 1);
   };
 
   return (
     <div className="all-members-page">
       <h2>All Members</h2>
+
       <p className="page-subtitle">
-        Create team members before assigning them to projects.
+        View all registered employees from the backend.
       </p>
 
-      <form className="member-form" onSubmit={handleSubmit}>
-        <h3>Add New Member</h3>
-
-        <label htmlFor="member-name">Member Name</label>
-        <input
-          id="member-name"
-          type="text"
-          placeholder="Enter member name"
-          value={name}
-          maxLength={100}
-          onChange={(event) => setName(event.target.value)}
-        />
-
-        <label htmlFor="member-role">Role</label>
-        <select
-          id="member-role"
-          value={role}
-          onChange={(event) => setRole(event.target.value)}
+      <div className="members-table-card">
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "12px",
+            marginBottom: "16px",
+          }}
         >
-          <option value="">Select Role</option>
+          <h3>
+            Team Members ({loading ? "..." : error ? "—" : members.length})
+          </h3>
 
-          {roles.map((item) => (
-            <option key={item} value={item}>
-              {item}
-            </option>
-          ))}
-        </select>
-
-        <button type="submit">+ Add Member</button>
+          <button
+            type="button"
+            onClick={handleRefresh}
+            disabled={loading}
+            style={{
+              padding: "9px 16px",
+              backgroundColor: "#2563eb",
+              color: "#ffffff",
+              border: "none",
+              borderRadius: "6px",
+              cursor: loading ? "not-allowed" : "pointer",
+              opacity: loading ? 0.6 : 1,
+            }}
+          >
+            {loading ? "Loading..." : "Refresh Members"}
+          </button>
+        </div>
 
         {error && (
           <p className="form-error" role="alert">
@@ -87,36 +95,36 @@ function AllMembers({ members, onAddMember }) {
           </p>
         )}
 
-        {message && (
-          <p className="form-success" role="status">
-            {message}
-          </p>
-        )}
-      </form>
-
-      <div className="members-table-card">
-        <h3>Team Members ({members.length})</h3>
-
         <div className="members-table-wrapper">
           <table className="members-table">
             <thead>
               <tr>
                 <th>SL</th>
-                <th>Name</th>
+                <th>Username</th>
                 <th>Role</th>
               </tr>
             </thead>
 
             <tbody>
-              {members.length === 0 ? (
+              {loading ? (
                 <tr>
-                  <td colSpan="3">No members added yet.</td>
+                  <td colSpan="3" role="status">
+                    Loading members from backend...
+                  </td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan="3">Unable to load members. Please try again.</td>
+                </tr>
+              ) : members.length === 0 ? (
+                <tr>
+                  <td colSpan="3">No registered employees found.</td>
                 </tr>
               ) : (
                 members.map((member, index) => (
                   <tr key={member.id}>
                     <td>{index + 1}</td>
-                    <td>{member.name}</td>
+                    <td>{member.username}</td>
                     <td>{member.role}</td>
                   </tr>
                 ))
