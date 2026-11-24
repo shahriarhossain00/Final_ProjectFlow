@@ -1,118 +1,309 @@
+/* ========================================
+   ALL MEMBERS PAGE
+======================================== */
+
 .all-members-page {
   width: 100%;
+  color: #17233d;
+}
+
+.all-members-page,
+.all-members-page * {
+  box-sizing: border-box;
 }
 
 .all-members-page h2 {
   margin: 0 0 8px;
-  font-size: 26px;
+  color: #17233d;
+  font-size: 28px;
+  font-weight: 750;
+  letter-spacing: -0.7px;
 }
 
-.page-subtitle {
-  margin: 0 0 24px;
+.all-members-page .page-subtitle {
+  margin: 0 0 26px;
   color: #64748b;
+  font-size: 14px;
+  line-height: 1.7;
 }
 
-.member-form {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 24px;
-  max-width: 550px;
-  margin-bottom: 28px;
-}
+/* ========================================
+   MEMBER FORM
+======================================== */
 
-.member-form h3 {
-  margin: 0 0 18px;
-}
-
-.member-form label {
-  display: block;
-  font-weight: 500;
-  margin: 16px 0 8px;
-}
-
-.member-form input,
-.member-form select {
+.all-members-page .member-form {
   width: 100%;
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  background: white;
-  font: inherit;
+  max-width: 650px;
+  padding: 28px;
+  margin-bottom: 28px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-top: 4px solid #6366f1;
+  border-radius: 18px;
+  box-shadow: 0 6px 24px rgba(15, 23, 42, 0.04);
 }
 
-.member-form button {
+.all-members-page .member-form h3 {
+  margin: 0 0 20px;
+  color: #1e293b;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.all-members-page .member-form label {
+  display: block;
+  margin: 18px 0 8px;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.all-members-page .member-form input,
+.all-members-page .member-form select {
+  width: 100%;
+  min-height: 46px;
+  padding: 12px 14px;
+  border: 1px solid #dbe3ef;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #17233d;
+  font: inherit;
+  outline: none;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.all-members-page .member-form input:focus,
+.all-members-page .member-form select:focus {
+  background: #ffffff;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+}
+
+.all-members-page .member-form button {
   margin-top: 22px;
-  padding: 12px 18px;
+  padding: 12px 20px;
   border: none;
-  border-radius: 8px;
-  background: #2563eb;
-  color: white;
-  font-weight: 600;
+  border-radius: 10px;
+  background: #4f46e5;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 650;
   cursor: pointer;
 }
 
-.member-form button:hover {
-  background: #1d4ed8;
+.all-members-page .member-form button:hover {
+  background: #4338ca;
 }
 
-.form-success {
-  color: #15803d;
-  background: #dcfce7;
-  padding: 12px;
-  border-radius: 8px;
-  margin-top: 16px;
-}
+/* ========================================
+   TABLE CARD
+======================================== */
 
-.form-error {
-  color: #b91c1c;
-  background: #fee2e2;
-  padding: 12px;
-  border-radius: 8px;
-  margin-top: 16px;
-}
-
-.members-table-card {
-  background: white;
+.all-members-page .members-table-card {
+  width: 100%;
+  min-width: 0;
+  padding: 26px;
+  background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 24px;
+  border-top: 4px solid #6366f1;
+  border-radius: 18px;
+  box-shadow: 0 6px 24px rgba(15, 23, 42, 0.04);
 }
 
-.members-table-card h3 {
+.all-members-page .members-table-card h3 {
   margin: 0 0 20px;
+  color: #1e293b;
+  font-size: 19px;
+  font-weight: 750;
+  letter-spacing: -0.3px;
 }
 
-.members-table-wrapper {
+.all-members-page .members-table-wrapper {
   width: 100%;
   overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: #a5b4fc #f1f5f9;
 }
 
-.members-table {
+.all-members-page .members-table {
   width: 100%;
-  border-collapse: collapse;
+  min-width: 420px;
+  border-collapse: separate;
+  border-spacing: 0;
   text-align: left;
 }
 
-.members-table th {
-  background: #f1f5f9;
-  color: #475569;
+/* Table Header */
+
+.all-members-page .members-table th {
+  padding: 16px 20px;
+  background: #eef2ff;
+  border-bottom: 1px solid #dbe3ef;
+  color: #4338ca;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+}
+
+/* Table Rows */
+
+.all-members-page .members-table td {
+  padding: 17px 20px;
+  border-bottom: 1px solid #edf0f5;
+  color: #334155;
   font-size: 14px;
+  line-height: 1.6;
+  vertical-align: middle;
+  overflow-wrap: anywhere;
 }
 
-.members-table th,
-.members-table td {
-  padding: 14px;
-  border-bottom: 1px solid #e2e8f0;
+.all-members-page .members-table tbody tr {
+  background: #ffffff;
+  transition: background 0.18s;
 }
 
-.members-table tr:last-child td {
+.all-members-page .members-table tbody tr:nth-child(even) {
+  background: #f8fafc;
+}
+
+.all-members-page .members-table tbody tr:hover {
+  background: #eef2ff;
+}
+
+.all-members-page .members-table tr:last-child td {
   border-bottom: none;
 }
 
+/* Serial Number */
+
+.all-members-page .members-table th:first-child,
+.all-members-page .members-table td:first-child {
+  width: 85px;
+  text-align: center;
+}
+
+.all-members-page .members-table td:first-child {
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Username */
+
+.all-members-page .members-table td:nth-child(2) {
+  color: #1e293b;
+  font-weight: 650;
+}
+
+.all-members-page .members-table td:nth-child(2)::before {
+  content: "";
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 10px;
+  border-radius: 50%;
+  background: #818cf8;
+  vertical-align: 1px;
+}
+
+/* Role Column */
+
+.all-members-page .members-table td:nth-child(3) {
+  color: #4338ca;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+/* Buttons */
+
+.all-members-page button {
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    filter 0.2s,
+    box-shadow 0.2s;
+}
+
+.all-members-page button:hover:not(:disabled) {
+  filter: brightness(0.95);
+}
+
+.all-members-page button:focus-visible {
+  outline: 3px solid #a5b4fc;
+  outline-offset: 3px;
+}
+
+.all-members-page button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ========================================
+   FEEDBACK MESSAGES
+======================================== */
+
+.all-members-page .form-success {
+  margin-top: 16px;
+  padding: 13px 16px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 10px;
+  color: #047857;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.all-members-page .form-error,
+.all-members-page [role="alert"] {
+  margin-top: 16px;
+  padding: 13px 16px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  color: #b91c1c;
+  font-size: 13px;
+}
+
+.all-members-page [role="status"] {
+  padding: 16px;
+  color: #4338ca;
+  background: #eef2ff;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+/* ========================================
+   RESPONSIVE
+======================================== */
+
 @media (max-width: 600px) {
-  .member-form,
-  .members-table-card {
+  .all-members-page h2 {
+    font-size: 23px;
+  }
+
+  .all-members-page .member-form,
+  .all-members-page .members-table-card {
     padding: 16px;
+    border-radius: 14px;
+  }
+
+  .all-members-page .members-table th,
+  .all-members-page .members-table td {
+    padding: 13px 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .all-members-page button,
+  .all-members-page input,
+  .all-members-page select,
+  .all-members-page .members-table tbody tr {
+    transition: none;
   }
 }

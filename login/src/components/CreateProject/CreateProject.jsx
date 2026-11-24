@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import "./CreateProject.css";
 
 import {
@@ -9,10 +9,34 @@ import {
   toUiProject,
 } from "../../services/projectApi";
 
+import { getTasks } from "../../services/taskApi";
+
+const PROJECT_STATUSES = ["Not Started", "In Progress", "Completed", "On Hold"];
+
+const MAX_PROJECT_NAME_LENGTH = 100;
+
+function getProjectId(task) {
+  if (task.project && typeof task.project === "object") {
+    return task.project.id;
+  }
+
+  return task.project ?? task.projectId;
+}
+
+function getAssignedUserId(task) {
+  if (task.assigned_to && typeof task.assigned_to === "object") {
+    return task.assigned_to.id;
+  }
+
+  return task.assigned_to ?? task.assignedMemberId;
+}
+
+function getErrorMessage(error, fallback) {
+  return error?.message || fallback;
+}
+
 function CreateProject({
-  projects,
-  memberships,
-  tasks,
+  projects = [],
   onSaveProject,
   onUpdateProject,
   onDeleteProject,
@@ -30,10 +54,15 @@ function CreateProject({
 
   const [departmentsLoading, setDepartmentsLoading] = useState(true);
   const [departmentsError, setDepartmentsError] = useState("");
+  const [departmentRefreshKey, setDepartmentRefreshKey] = useState(0);
 
   const [submitting, setSubmitting] = useState(false);
   const [editingBusy, setEditingBusy] = useState(false);
   const [deletingBusy, setDeletingBusy] = useState(false);
+
+  const createLock = useRef(false);
+  const editLock = useRef(false);
+  const deleteLock = useRef(false);
 
   // Edit Project Modal
   const [editingProject, setEditingProject] = useState(null);
@@ -43,7 +72,9 @@ function CreateProject({
 
   // Delete Project Modal
   const [deletingProject, setDeletingProject] = useState(null);
-  const [transferProjectId, setTransferProjectId] = useState("");
+  const [deletingProjectTasks, setDeletingProjectTasks] = useState([]);
+  const [deleteDetailsLoading, setDeleteDetailsLoading] = useState(false);
+  const [deleteDetailsError, setDeleteDetailsError] = useState("");
 
   // Messages
   const [message, setMessage] = useState("");
@@ -54,6 +85,9 @@ function CreateProject({
     const controller = new AbortController();
 
     async function loadDepartments() {
+      setDepartmentsLoading(true);
+      setDepartmentsError("");
+
       try {
         const data = await getDepartments(controller.signal);
 
@@ -61,8 +95,12 @@ function CreateProject({
           setDepartments(data);
         }
       } catch (err) {
-        if (err.name !== "AbortError") {
-          setDepartmentsError(err.message);
+        if (!controller.signal.aborted) {
+          setDepartments([]);
+
+          setDepartmentsError(
+            getErrorMessage(err, "Failed to load departments."),
+          );
         }
       } finally {
         if (!controller.signal.aborted) {
@@ -74,13 +112,52 @@ function CreateProject({
     loadDepartments();
 
     return () => controller.abort();
-  }, []);
+  }, [departmentRefreshKey]);
+
+  // Load latest backend tasks before deleting a project
+  useEffect(() => {
+    if (!deletingProject) return;
+
+    const controller = new AbortController();
+
+    async function loadProjectTasks() {
+      setDeleteDetailsLoading(true);
+      setDeleteDetailsError("");
+      setDeletingProjectTasks([]);
+
+      try {
+        const data = await getTasks(controller.signal);
+
+        if (controller.signal.aborted) return;
+
+        const projectTasks = data.filter(
+          (task) => String(getProjectId(task)) === String(deletingProject.id),
+        );
+
+        setDeletingProjectTasks(projectTasks);
+      } catch (err) {
+        if (!controller.signal.aborted) {
+          setDeleteDetailsError(
+            getErrorMessage(err, "Failed to load project task details."),
+          );
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setDeleteDetailsLoading(false);
+        }
+      }
+    }
+
+    loadProjectTasks();
+
+    return () => controller.abort();
+  }, [deletingProject]);
 
   // Create Project
   const handleSave = async (event) => {
     event.preventDefault();
 
-    if (submitting) return;
+    if (createLock.current) return;
 
     setError("");
     setMessage("");
@@ -92,8 +169,22 @@ function CreateProject({
       return;
     }
 
-    if (!departmentId) {
-      setError("Please select a department.");
+    if (name.length > MAX_PROJECT_NAME_LENGTH) {
+      setError("Project name cannot exceed 100 characters.");
+      return;
+    }
+
+    const validDepartment = departments.some(
+      (department) => String(department.id) === String(departmentId),
+    );
+
+    if (!departmentId || !validDepartment) {
+      setError("Please select a valid department.");
+      return;
+    }
+
+    if (!PROJECT_STATUSES.includes(status)) {
+      setError("Please select a valid project status.");
       return;
     }
 
@@ -103,7 +194,8 @@ function CreateProject({
     }
 
     const duplicate = projects.some(
-      (project) => project.projectName?.toLowerCase() === name.toLowerCase(),
+      (project) =>
+        project.projectName?.trim().toLowerCase() === name.toLowerCase(),
     );
 
     if (duplicate) {
@@ -111,6 +203,7 @@ function CreateProject({
       return;
     }
 
+    createLock.current = true;
     setSubmitting(true);
 
     try {
@@ -123,13 +216,17 @@ function CreateProject({
         finish_date: finishDate || null,
       };
 
-      console.log("Create Project Request:", payload);
+      const savedProject = await createProject(payload);
 
-      const savedProject = await createProject(payload); //project create
+      try {
+        await onSaveProject(toUiProject(savedProject));
+      } catch {
+        setError(
+          "Project was created on the server, but the local list could not be updated. Refresh the page.",
+        );
 
-      console.log("Create Project Response:", savedProject);
-
-      onSaveProject(toUiProject(savedProject)); 
+        return;
+      }
 
       setProjectName("");
       setDescription("");
@@ -140,10 +237,9 @@ function CreateProject({
 
       setMessage("Project created successfully!");
     } catch (err) {
-      console.error("Create Project Error:", err);
-
-      setError(err.message || "Could not create project.");
+      setError(getErrorMessage(err, "Could not create project."));
     } finally {
+      createLock.current = false;
       setSubmitting(false);
     }
   };
@@ -151,7 +247,7 @@ function CreateProject({
   // Open Edit Modal
   const handleEdit = (project) => {
     setEditingProject(project);
-    setEditedProjectName(project.projectName);
+    setEditedProjectName(project.projectName || "");
     setEditedDescription(project.description || "");
 
     setEditSuccess(false);
@@ -163,7 +259,7 @@ function CreateProject({
   const handleUpdate = async (event) => {
     event.preventDefault();
 
-    if (!editingProject || editSuccess || editingBusy) return;
+    if (!editingProject || editSuccess || editLock.current) return;
 
     setError("");
     setMessage("");
@@ -175,10 +271,15 @@ function CreateProject({
       return;
     }
 
+    if (name.length > MAX_PROJECT_NAME_LENGTH) {
+      setError("Project name cannot exceed 100 characters.");
+      return;
+    }
+
     const duplicate = projects.some(
       (project) =>
-        project.projectName?.toLowerCase() === name.toLowerCase() &&
-        project.id !== editingProject.id,
+        project.projectName?.trim().toLowerCase() === name.toLowerCase() &&
+        String(project.id) !== String(editingProject.id),
     );
 
     if (duplicate) {
@@ -186,30 +287,37 @@ function CreateProject({
       return;
     }
 
+    editLock.current = true;
     setEditingBusy(true);
 
     try {
-      //edit
       const savedProject = await updateProject(editingProject.id, {
         name,
         description: editedDescription.trim(),
       });
 
-      onUpdateProject(toUiProject(savedProject));
+      try {
+        await onUpdateProject(toUiProject(savedProject));
+      } catch {
+        setError(
+          "Project was updated on the server. Refresh the page to see the latest data.",
+        );
+
+        return;
+      }
 
       setEditSuccess(true);
     } catch (err) {
-      console.error("Update Project Error:", err);
-
-      setError(err.message || "Could not update project.");
+      setError(getErrorMessage(err, "Could not update project."));
     } finally {
+      editLock.current = false;
       setEditingBusy(false);
     }
   };
 
   // Close Edit Modal
   const closeEditModal = () => {
-    if (editingBusy) return;
+    if (editLock.current) return;
 
     setEditingProject(null);
     setEditedProjectName("");
@@ -220,45 +328,71 @@ function CreateProject({
 
   // Open Delete Modal
   const openDeleteModal = (project) => {
+    setDeletingProjectTasks([]);
+    setDeleteDetailsError("");
+    setDeleteDetailsLoading(true);
     setDeletingProject(project);
-    setTransferProjectId("");
     setError("");
     setMessage("");
   };
 
+  // Close Delete Modal
+  const closeDeleteModal = () => {
+    if (deleteLock.current) return;
+
+    setDeletingProject(null);
+    setDeletingProjectTasks([]);
+    setDeleteDetailsError("");
+    setDeleteDetailsLoading(false);
+    setError("");
+  };
+
   // Delete Project
   const handleConfirmDelete = async () => {
-    if (!deletingProject || deletingBusy) return;
-
-    setError("");
-
-    if (transferProjectId) {
-      setError(
-        "Member transfer is not connected to Django yet. Select Keep Members Unassigned or cancel.",
-      );
+    if (
+      !deletingProject ||
+      deleteLock.current ||
+      deleteDetailsLoading ||
+      deleteDetailsError
+    ) {
       return;
     }
 
+    setError("");
+
+    deleteLock.current = true;
     setDeletingBusy(true);
 
     try {
-      await deleteProject(deletingProject.id);
+      const projectId = deletingProject.id;
 
-      const success = onDeleteProject(deletingProject.id, "");
+      await deleteProject(projectId);
 
-      if (!success) {
-        throw new Error("Project deleted on server. Refresh the project list.");
+      try {
+        const success = await onDeleteProject(projectId, "");
+
+        if (success === false) {
+          throw new Error("Local project update failed.");
+        }
+      } catch {
+        setDeletingProject(null);
+        setDeletingProjectTasks([]);
+
+        setError(
+          "Project was deleted on the server. Refresh the page to update the project list.",
+        );
+
+        return;
       }
 
       setDeletingProject(null);
-      setTransferProjectId("");
+      setDeletingProjectTasks([]);
 
       setMessage("Project deleted successfully!");
     } catch (err) {
-      console.error("Delete Project Error:", err);
-
-      setError(err.message || "Could not delete project.");
+      setError(getErrorMessage(err, "Could not delete project."));
     } finally {
+      deleteLock.current = false;
       setDeletingBusy(false);
     }
   };
@@ -270,13 +404,19 @@ function CreateProject({
     const handleEscape = (event) => {
       if (event.key !== "Escape") return;
 
-      if (editingProject && !editingBusy) {
-        closeEditModal();
+      if (editingProject && !editLock.current) {
+        setEditingProject(null);
+        setEditedProjectName("");
+        setEditedDescription("");
+        setEditSuccess(false);
+        setError("");
       }
 
-      if (deletingProject && !deletingBusy) {
+      if (deletingProject && !deleteLock.current) {
         setDeletingProject(null);
-        setTransferProjectId("");
+        setDeletingProjectTasks([]);
+        setDeleteDetailsError("");
+        setDeleteDetailsLoading(false);
         setError("");
       }
     };
@@ -286,20 +426,17 @@ function CreateProject({
     return () => {
       document.removeEventListener("keydown", handleEscape);
     };
-  }, [editingProject, deletingProject, editingBusy, deletingBusy]);
+  }, [editingProject, deletingProject]);
 
-  // Count Project Members and Tasks
-  const deletingMemberCount = deletingProject
-    ? memberships.filter(
-        (item) => String(item.projectId) === String(deletingProject.id),
-      ).length
-    : 0;
+  // Count unique users assigned to project tasks
+  const deletingMemberCount = new Set(
+    deletingProjectTasks
+      .map(getAssignedUserId)
+      .filter((id) => id != null && id !== "")
+      .map(String),
+  ).size;
 
-  const deletingTaskCount = deletingProject
-    ? tasks.filter(
-        (task) => String(task.projectId) === String(deletingProject.id),
-      ).length
-    : 0;
+  const deletingTaskCount = deletingProjectTasks.length;
 
   return (
     <div className="create-project-page">
@@ -318,8 +455,9 @@ function CreateProject({
           type="text"
           placeholder="Enter project name"
           value={projectName}
-          maxLength={120}
+          maxLength={MAX_PROJECT_NAME_LENGTH}
           required
+          disabled={submitting}
           onChange={(event) => setProjectName(event.target.value)}
         />
 
@@ -330,6 +468,7 @@ function CreateProject({
           placeholder="Description about the project"
           rows={4}
           value={description}
+          disabled={submitting}
           onChange={(event) => setDescription(event.target.value)}
         />
 
@@ -339,7 +478,9 @@ function CreateProject({
           id="projectDepartment"
           value={departmentId}
           required
-          disabled={departmentsLoading || submitting}
+          disabled={
+            departmentsLoading || submitting || Boolean(departmentsError)
+          }
           onChange={(event) => setDepartmentId(event.target.value)}
         >
           <option value="">
@@ -356,9 +497,19 @@ function CreateProject({
         </select>
 
         {departmentsError && (
-          <p className="form-error" role="alert">
-            {departmentsError}
-          </p>
+          <div role="alert">
+            <p className="form-error">{departmentsError}</p>
+
+            <button
+              type="button"
+              className="project-cancel-btn"
+              onClick={() =>
+                setDepartmentRefreshKey((previous) => previous + 1)
+              }
+            >
+              Retry
+            </button>
+          </div>
         )}
 
         <label htmlFor="projectStatus">Status</label>
@@ -366,15 +517,14 @@ function CreateProject({
         <select
           id="projectStatus"
           value={status}
+          disabled={submitting}
           onChange={(event) => setStatus(event.target.value)}
         >
-          {["Not Started", "In Progress", "Completed", "On Hold"].map(
-            (item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ),
-          )}
+          {PROJECT_STATUSES.map((item) => (
+            <option key={item} value={item}>
+              {item}
+            </option>
+          ))}
         </select>
 
         <label htmlFor="projectStartDate">Start Date (optional)</label>
@@ -383,6 +533,7 @@ function CreateProject({
           id="projectStartDate"
           type="date"
           value={startDate}
+          disabled={submitting}
           onChange={(event) => setStartDate(event.target.value)}
         />
 
@@ -393,6 +544,7 @@ function CreateProject({
           type="date"
           min={startDate || undefined}
           value={finishDate}
+          disabled={submitting}
           onChange={(event) => setFinishDate(event.target.value)}
         />
 
@@ -456,6 +608,7 @@ function CreateProject({
                         <button
                           type="button"
                           className="project-table-edit"
+                          disabled={submitting}
                           onClick={() => handleEdit(project)}
                         >
                           Edit
@@ -464,6 +617,7 @@ function CreateProject({
                         <button
                           type="button"
                           className="project-table-delete"
+                          disabled={submitting}
                           onClick={() => openDeleteModal(project)}
                         >
                           Delete
@@ -512,6 +666,7 @@ function CreateProject({
                 type="button"
                 className="edit-modal-close"
                 aria-label="Close edit modal"
+                disabled={editingBusy}
                 onClick={closeEditModal}
               >
                 ×
@@ -527,8 +682,10 @@ function CreateProject({
                     id="edit-project-name"
                     type="text"
                     value={editedProjectName}
-                    maxLength={120}
+                    maxLength={MAX_PROJECT_NAME_LENGTH}
+                    required
                     autoFocus
+                    disabled={editingBusy}
                     onChange={(event) =>
                       setEditedProjectName(event.target.value)
                     }
@@ -540,6 +697,7 @@ function CreateProject({
                     id="edit-project-description"
                     rows={5}
                     value={editedDescription}
+                    disabled={editingBusy}
                     onChange={(event) =>
                       setEditedDescription(event.target.value)
                     }
@@ -606,32 +764,39 @@ function CreateProject({
               <strong>{deletingProject.projectName}</strong>?
             </p>
 
-            <p className="delete-warning">
-              This will permanently remove {deletingTaskCount} task(s). Members
-              will not be deleted.
-            </p>
+            {deleteDetailsLoading && (
+              <p role="status">Loading project task details...</p>
+            )}
 
-            <p>
-              Current Members: <strong>{deletingMemberCount}</strong>
-            </p>
+            {deleteDetailsError && (
+              <p className="form-error" role="alert">
+                {deleteDetailsError} Close this dialog and try again.
+              </p>
+            )}
 
-            <label htmlFor="transfer-project">Transfer Members To</label>
+            {!deleteDetailsLoading && !deleteDetailsError && (
+              <>
+                <p className="delete-warning">
+                  This action will permanently delete the project, its{" "}
+                  {deletingTaskCount} task(s), associated chat messages, task
+                  submissions and related notifications. This action cannot be
+                  undone.
+                </p>
 
-            <select
-              id="transfer-project"
-              value={transferProjectId}
-              onChange={(event) => setTransferProjectId(event.target.value)}
-            >
-              <option value="">Keep Members Unassigned</option>
+                <p>
+                  Total Tasks: <strong>{deletingTaskCount}</strong>
+                </p>
 
-              {projects
-                .filter((project) => project.id !== deletingProject.id)
-                .map((project) => (
-                  <option key={project.id} value={project.id}>
-                    {project.projectName}
-                  </option>
-                ))}
-            </select>
+                <p>
+                  Assigned Members: <strong>{deletingMemberCount}</strong>
+                </p>
+
+                <p>
+                  Member accounts will not be deleted. Their tasks belonging to
+                  this project will be removed.
+                </p>
+              </>
+            )}
 
             {error && (
               <p className="form-error" role="alert">
@@ -644,11 +809,7 @@ function CreateProject({
                 type="button"
                 className="project-cancel-btn"
                 disabled={deletingBusy}
-                onClick={() => {
-                  setDeletingProject(null);
-                  setTransferProjectId("");
-                  setError("");
-                }}
+                onClick={closeDeleteModal}
               >
                 Cancel
               </button>
@@ -657,9 +818,17 @@ function CreateProject({
                 type="button"
                 className="confirm-delete-btn"
                 onClick={handleConfirmDelete}
-                disabled={deletingBusy}
+                disabled={
+                  deletingBusy ||
+                  deleteDetailsLoading ||
+                  Boolean(deleteDetailsError)
+                }
               >
-                {deletingBusy ? "Deleting..." : "Confirm Delete"}
+                {deletingBusy
+                  ? "Deleting..."
+                  : deleteDetailsLoading
+                    ? "Loading..."
+                    : "Confirm Delete"}
               </button>
             </div>
           </div>

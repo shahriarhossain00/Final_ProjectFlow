@@ -1,147 +1,264 @@
-/* Page Heading */
+/* ========================================
+   CREATE PROJECT PAGE
+======================================== */
+
+.create-project-page {
+  width: 100%;
+  color: #17233d;
+}
+
+.create-project-page,
+.create-project-page * {
+  box-sizing: border-box;
+}
 
 .create-project-page h2 {
   margin: 0 0 8px;
-  font-size: 26px;
-  color: #1e293b;
+  font-size: 28px;
+  font-weight: 750;
+  letter-spacing: -0.7px;
+  color: #17233d;
 }
 
-.project-page-subtitle {
+.create-project-page .project-page-subtitle {
+  margin: 0 0 26px;
   color: #64748b;
-  margin-bottom: 24px;
+  font-size: 14px;
+  line-height: 1.7;
 }
 
-/* Create Project Form */
+/* ========================================
+   CREATE PROJECT FORM
+======================================== */
 
-.create-project-form {
+.create-project-page .create-project-form {
   width: 100%;
-  max-width: 600px;
-  padding: 26px;
+  max-width: 850px;
+  padding: 30px;
   margin-bottom: 30px;
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-top: 4px solid #6366f1;
+  border-radius: 18px;
+  box-shadow: 0 6px 24px rgba(15, 23, 42, 0.04);
 }
 
-.create-project-form h3 {
-  margin: 0 0 20px;
+.create-project-page .create-project-form h3 {
+  margin: 0 0 24px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #e2e8f0;
   color: #1e293b;
+  font-size: 20px;
+  font-weight: 750;
+  letter-spacing: -0.3px;
 }
 
-.create-project-form label {
+.create-project-page .create-project-form label {
   display: block;
-  margin: 18px 0 8px;
-  font-weight: 500;
+  margin: 20px 0 9px;
+  font-size: 13px;
+  font-weight: 650;
   color: #334155;
 }
 
-.create-project-form input,
-.create-project-form textarea {
+.create-project-page .create-project-form input,
+.create-project-page .create-project-form textarea,
+.create-project-page .create-project-form select {
   display: block;
   width: 100%;
-  padding: 12px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  background: white;
+  min-width: 0;
+  min-height: 46px;
+  padding: 12px 15px;
+  border: 1px solid #dbe3ef;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #17233d;
   font: inherit;
+  font-size: 14px;
+  line-height: 1.6;
+  outline: none;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s,
+    background 0.2s;
 }
 
-.create-project-form textarea {
+.create-project-page .create-project-form textarea {
+  min-height: 120px;
   resize: vertical;
 }
 
-.create-project-form input:focus,
-.create-project-form textarea:focus {
-  outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+.create-project-page .create-project-form input::placeholder,
+.create-project-page .create-project-form textarea::placeholder {
+  color: #94a3b8;
 }
 
-/* Create Project Buttons */
-
-.project-form-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 24px;
+.create-project-page .create-project-form input:focus,
+.create-project-page .create-project-form textarea:focus,
+.create-project-page .create-project-form select:focus {
+  background: #ffffff;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
 }
 
-.project-form-actions button {
-  padding: 12px 20px;
-  background: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
+.create-project-page .create-project-form select {
   cursor: pointer;
 }
 
-.project-form-actions button:hover {
-  background: #1d4ed8;
+/* ========================================
+   FORM BUTTONS
+======================================== */
+
+.create-project-page .project-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 26px;
+  padding-top: 20px;
+  border-top: 1px solid #e2e8f0;
 }
 
-/* Project Table */
+.create-project-page .project-form-actions button {
+  min-height: 44px;
+  padding: 12px 22px;
+  background: #4f46e5;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
+  transition:
+    background 0.2s,
+    transform 0.2s;
+}
 
-.projects-table-card {
-  padding: 24px;
-  background: white;
+.create-project-page .project-form-actions button:hover:not(:disabled) {
+  background: #4338ca;
+  transform: translateY(-1px);
+}
+
+.create-project-page button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ========================================
+   PROJECT TABLE
+======================================== */
+
+.create-project-page .projects-table-card {
+  width: 100%;
+  min-width: 0;
+  padding: 26px;
+  background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: 18px;
+  box-shadow: 0 6px 24px rgba(15, 23, 42, 0.04);
 }
 
-.projects-table-card h3 {
-  margin: 0 0 20px;
+.create-project-page .projects-table-card h3 {
+  margin: 0 0 22px;
   color: #1e293b;
+  font-size: 20px;
+  font-weight: 750;
 }
 
-.projects-table-wrapper {
+.create-project-page .projects-table-wrapper {
   width: 100%;
   overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: #a5b4fc #f1f5f9;
 }
 
-.projects-table {
+.create-project-page .projects-table {
   width: 100%;
-  border-collapse: collapse;
+  min-width: 650px;
+  border-collapse: separate;
+  border-spacing: 0;
   text-align: left;
 }
 
-.projects-table th {
-  background: #f1f5f9;
-  color: #475569;
-  font-size: 14px;
+.create-project-page .projects-table th {
+  background: #eef2ff;
+  color: #4338ca;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
 }
 
-.projects-table th,
-.projects-table td {
-  padding: 14px;
+.create-project-page .projects-table th,
+.create-project-page .projects-table td {
+  padding: 16px 18px;
   border-bottom: 1px solid #e2e8f0;
   vertical-align: middle;
   overflow-wrap: anywhere;
 }
 
-.project-table-actions {
+.create-project-page .projects-table td {
+  color: #334155;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.create-project-page .projects-table tbody tr:nth-child(even) {
+  background: #f8fafc;
+}
+
+.create-project-page .projects-table tbody tr:hover {
+  background: #f5f3ff;
+}
+
+.create-project-page .projects-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.create-project-page .project-table-actions {
   display: flex;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
-.project-table-actions button {
-  padding: 8px 13px;
-  border: none;
-  border-radius: 7px;
-  font-weight: 500;
+.create-project-page .project-table-actions button {
+  padding: 9px 14px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 650;
   cursor: pointer;
+  transition: background 0.2s;
 }
 
-.project-table-edit {
-  background: #dbeafe;
-  color: #1d4ed8;
+.create-project-page .project-table-edit {
+  background: #eef2ff;
+  color: #4338ca;
+  border-color: #c7d2fe;
 }
 
-.project-table-delete {
-  background: #fee2e2;
+.create-project-page .project-table-edit:hover {
+  background: #e0e7ff;
+}
+
+.create-project-page .project-table-delete {
+  background: #fef2f2;
   color: #b91c1c;
+  border-color: #fecaca;
 }
 
-/* Shared Modal Overlay */
+.create-project-page .project-table-delete:hover {
+  background: #fee2e2;
+}
+
+/* ========================================
+   SHARED MODAL OVERLAY
+======================================== */
 
 .project-modal-overlay {
   position: fixed;
@@ -150,174 +267,212 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 16px;
-  background: rgba(15, 23, 42, 0.55);
+  padding: 18px;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
 }
 
-/* Edit Project Modal */
+/* ========================================
+   EDIT PROJECT MODAL
+======================================== */
 
 .project-edit-modal {
   width: 100%;
-  max-width: 520px;
+  max-width: 580px;
   max-height: 90dvh;
   overflow-y: auto;
   background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 25px 60px rgba(15, 23, 42, 0.25);
+  border-radius: 20px;
+  box-shadow: 0 25px 70px rgba(15, 23, 42, 0.25);
   animation: editModalAppear 0.2s ease-out;
+  scrollbar-width: thin;
+  scrollbar-color: #a5b4fc #f1f5f9;
 }
 
-.edit-modal-header {
+.project-edit-modal .edit-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 24px 26px 18px;
-  border-bottom: 1px solid #e2e8f0;
+  gap: 14px;
+  padding: 26px 28px;
+  background: #eef2ff;
+  border-bottom: 1px solid #e0e7ff;
 }
 
-.edit-modal-header h3 {
+.project-edit-modal .edit-modal-header h3 {
   margin: 0 0 6px;
   font-size: 22px;
-  color: #1e293b;
+  font-weight: 750;
+  color: #1e1b4b;
 }
 
-.edit-modal-header p {
+.project-edit-modal .edit-modal-header p {
   margin: 0;
   color: #64748b;
   font-size: 13px;
+  line-height: 1.6;
 }
 
-.edit-modal-close {
+.project-edit-modal .edit-modal-close {
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
-  border: none;
-  border-radius: 8px;
-  background: #f1f5f9;
-  color: #475569;
-  font-size: 24px;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border: 1px solid #c7d2fe;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #4338ca;
+  font-size: 23px;
   cursor: pointer;
 }
 
-.edit-modal-close:hover {
-  background: #e2e8f0;
+.project-edit-modal .edit-modal-close:hover {
+  background: #e0e7ff;
 }
 
-.edit-modal-body {
-  padding: 24px 26px;
+.project-edit-modal .edit-modal-body {
+  padding: 26px 28px;
 }
 
-.edit-modal-body label {
+.project-edit-modal .edit-modal-body label {
   display: block;
-  margin: 0 0 8px;
-  font-weight: 600;
-  font-size: 14px;
+  margin: 0 0 9px;
+  font-weight: 650;
+  font-size: 13px;
   color: #334155;
 }
 
-.edit-modal-body input,
-.edit-modal-body textarea {
+.project-edit-modal .edit-modal-body input,
+.project-edit-modal .edit-modal-body textarea,
+.project-edit-modal .edit-modal-body select {
+  display: block;
   width: 100%;
+  min-height: 45px;
   padding: 12px 14px;
   margin-bottom: 20px;
-  border: 1px solid #cbd5e1;
-  border-radius: 9px;
+  border: 1px solid #dbe3ef;
+  border-radius: 10px;
   background: #f8fafc;
-  color: #1e293b;
+  color: #17233d;
   font: inherit;
+  font-size: 14px;
+  outline: none;
 }
 
-.edit-modal-body textarea {
+.project-edit-modal .edit-modal-body textarea {
+  min-height: 110px;
   resize: vertical;
 }
 
-.edit-modal-body input:focus,
-.edit-modal-body textarea:focus {
-  outline: none;
-  border-color: #2563eb;
-  background: white;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+.project-edit-modal .edit-modal-body input:focus,
+.project-edit-modal .edit-modal-body textarea:focus,
+.project-edit-modal .edit-modal-body select:focus {
+  border-color: #6366f1;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
 }
 
-.edit-modal-footer {
+.project-edit-modal .edit-modal-footer {
   display: flex;
   justify-content: flex-end;
   align-items: center;
   gap: 12px;
-  padding: 18px 26px;
+  padding: 20px 28px;
   background: #f8fafc;
   border-top: 1px solid #e2e8f0;
 }
 
-.edit-modal-footer button {
-  padding: 11px 18px;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 14px;
+.project-edit-modal .edit-modal-footer button {
+  min-height: 42px;
+  padding: 11px 20px;
+  border-radius: 10px;
+  font-family: inherit;
+  font-weight: 650;
+  font-size: 13px;
   cursor: pointer;
 }
 
-.edit-modal-cancel {
-  border: 1px solid #cbd5e1;
-  background: white;
+.project-edit-modal .edit-modal-cancel {
+  border: 1px solid #dbe3ef;
+  background: #ffffff;
   color: #475569;
 }
 
-.edit-modal-save {
-  background: #2563eb;
-  border: 1px solid #2563eb;
-  color: white;
+.project-edit-modal .edit-modal-cancel:hover {
+  background: #f1f5f9;
 }
 
-.edit-modal-save:hover {
-  background: #1d4ed8;
+.project-edit-modal .edit-modal-save {
+  background: #4f46e5;
+  border: 1px solid #4f46e5;
+  color: #ffffff;
 }
 
-/* Delete Project Modal */
+.project-edit-modal .edit-modal-save:hover:not(:disabled) {
+  background: #4338ca;
+}
+
+/* ========================================
+   DELETE PROJECT MODAL
+======================================== */
 
 .project-delete-modal {
   width: 100%;
-  max-width: 470px;
+  max-width: 490px;
   max-height: 90dvh;
   overflow-y: auto;
-  padding: 26px;
-  background: white;
-  border-radius: 12px;
+  padding: 28px;
+  background: #ffffff;
+  border: 1px solid #fecaca;
+  border-top: 4px solid #ef4444;
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.2);
 }
 
 .project-delete-modal h3 {
   margin: 0 0 16px;
+  color: #991b1b;
+  font-size: 21px;
+  font-weight: 750;
 }
 
 .project-delete-modal p {
-  line-height: 1.6;
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
 }
 
-.delete-warning {
-  padding: 12px;
+.project-delete-modal .delete-warning {
+  padding: 14px;
   color: #b91c1c;
-  background: #fee2e2;
-  border-radius: 8px;
-  font-size: 14px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  font-size: 13px;
 }
 
 .project-delete-modal label {
   display: block;
-  margin: 20px 0 8px;
-  font-weight: 500;
+  margin: 20px 0 9px;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 650;
 }
 
 .project-delete-modal select {
   width: 100%;
+  min-height: 44px;
   padding: 12px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  background: white;
+  border: 1px solid #dbe3ef;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #334155;
   font: inherit;
 }
 
-.project-delete-actions {
+.project-delete-modal .project-delete-actions {
   display: flex;
   justify-content: flex-end;
   flex-wrap: wrap;
@@ -325,24 +480,96 @@
   margin-top: 24px;
 }
 
-.project-delete-actions button {
-  padding: 10px 16px;
+.project-delete-modal .project-delete-actions button {
+  min-height: 42px;
+  padding: 11px 18px;
   border: none;
-  border-radius: 8px;
+  border-radius: 9px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 650;
   cursor: pointer;
 }
 
-.project-delete-actions .project-cancel-btn {
-  background: #e2e8f0;
+.project-delete-modal .project-cancel-btn {
+  background: #f1f5f9;
   color: #334155;
 }
 
-.confirm-delete-btn {
+.project-delete-modal .confirm-delete-btn {
   background: #dc2626;
-  color: white;
+  color: #ffffff;
 }
 
-/* Animation */
+.project-delete-modal .confirm-delete-btn:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+/* ========================================
+   SUCCESS AND ERROR MESSAGES
+======================================== */
+
+.project-edit-modal .edit-success-section {
+  padding: 22px 28px 26px;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.project-edit-modal .edit-success-message,
+.create-project-page .form-success {
+  padding: 14px 16px;
+  margin: 0 0 16px;
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.create-project-page .form-error {
+  padding: 13px 16px;
+  margin: 12px 0;
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  font-size: 13px;
+}
+
+.project-edit-modal .back-to-project-btn {
+  width: 100%;
+  padding: 12px 18px;
+  background: #4f46e5;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.project-edit-modal .back-to-project-btn:hover {
+  background: #4338ca;
+}
+
+.create-project-page button:focus-visible,
+.project-edit-modal button:focus-visible,
+.project-delete-modal button:focus-visible {
+  outline: 3px solid #a5b4fc;
+  outline-offset: 3px;
+}
+
+.project-edit-modal button:disabled,
+.project-delete-modal button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ========================================
+   ANIMATION
+======================================== */
 
 @keyframes editModalAppear {
   from {
@@ -356,32 +583,47 @@
   }
 }
 
-/* Responsive */
+/* ========================================
+   RESPONSIVE
+======================================== */
 
 @media (max-width: 600px) {
-  .create-project-form,
-  .projects-table-card,
+  .create-project-page h2 {
+    font-size: 23px;
+  }
+
+  .create-project-page .create-project-form,
+  .create-project-page .projects-table-card,
   .project-delete-modal {
-    padding: 16px;
+    padding: 18px;
+    border-radius: 14px;
   }
 
   .project-edit-modal {
     max-width: 100%;
-    border-radius: 12px;
+    border-radius: 14px;
   }
 
-  .edit-modal-header,
-  .edit-modal-body {
+  .project-edit-modal .edit-modal-header,
+  .project-edit-modal .edit-modal-body {
     padding: 18px;
   }
 
-  .edit-modal-footer {
+  .project-edit-modal .edit-modal-footer {
     padding: 16px 18px;
     flex-wrap: wrap;
   }
 
-  .edit-modal-footer button {
+  .project-edit-modal .edit-modal-footer button {
     flex: 1;
+  }
+
+  .project-edit-modal .edit-success-section {
+    padding: 18px;
+  }
+
+  .create-project-page .project-form-actions button {
+    width: 100%;
   }
 }
 
@@ -389,46 +631,15 @@
   .project-edit-modal {
     animation: none;
   }
-}
-/* Edit Success Section */
 
-.edit-success-section {
-  padding: 20px 26px 24px;
-  border-top: 1px solid #e2e8f0;
-  background: #f8fafc;
-}
+  .create-project-page input,
+  .create-project-page textarea,
+  .create-project-page select,
+  .create-project-page button {
+    transition: none;
+  }
 
-.edit-success-message {
-  display: flex;
-  align-items: center;
-  padding: 14px 16px;
-  margin: 0 0 16px;
-  background: #dcfce7;
-  color: #15803d;
-  border: 1px solid #bbf7d0;
-  border-radius: 9px;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.back-to-project-btn {
-  width: 100%;
-  padding: 12px 18px;
-  background: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 9px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.back-to-project-btn:hover {
-  background: #1d4ed8;
-}
-
-@media (max-width: 600px) {
-  .edit-success-section {
-    padding: 16px 18px;
+  .create-project-page .project-form-actions button:hover {
+    transform: none;
   }
 }
